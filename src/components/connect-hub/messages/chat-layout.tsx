@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send } from "lucide-react";
+import { Search, Send, ArrowLeft } from "lucide-react";
 import type { Conversation, Message, User } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
@@ -16,13 +17,16 @@ type ChatLayoutProps = {
 };
 
 export function ChatLayout({ conversations, users, messages, currentUser }: ChatLayoutProps) {
-  const [selectedUserId, setSelectedUserId] = useState(conversations[0]?.userId);
-  const selectedConversationMessages = messages[selectedUserId] || [];
-  const selectedUser = users.find(u => u.id === selectedUserId);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const selectedConversationMessages = selectedUserId ? messages[selectedUserId] || [] : [];
+  const selectedUser = selectedUserId ? users.find(u => u.id === selectedUserId) : null;
 
   return (
     <div className="flex h-full border-t">
-      <div className="w-1/3 flex-shrink-0 border-r bg-card">
+      <div className={cn(
+        "w-full md:w-1/3 flex-shrink-0 border-r bg-card md:flex flex-col",
+        selectedUserId && "hidden"
+      )}>
         <div className="flex h-full flex-col">
           <div className="p-4 border-b">
             <div className="relative">
@@ -58,10 +62,16 @@ export function ChatLayout({ conversations, users, messages, currentUser }: Chat
           </div>
         </div>
       </div>
-      <div className="flex-1 flex flex-col">
+      <div className={cn(
+        "flex-1 flex-col",
+        selectedUserId ? "flex" : "hidden md:flex"
+      )}>
         {selectedUser ? (
           <>
             <div className="flex items-center gap-3 p-4 border-b">
+               <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSelectedUserId(null)}>
+                  <ArrowLeft className="h-5 w-5" />
+               </Button>
               <Avatar>
                 <AvatarImage src={selectedUser.avatar.url} alt={selectedUser.name} data-ai-hint={selectedUser.avatar.hint}/>
                 <AvatarFallback>{selectedUser.name.charAt(0)}</AvatarFallback>
