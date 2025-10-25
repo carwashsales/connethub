@@ -1,3 +1,5 @@
+'use client';
+
 import { NewsFeed } from "@/components/connect-hub/news-feed/news-feed";
 import { posts } from "@/lib/data";
 

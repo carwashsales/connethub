@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { createPostAction, type CreatePostState } from '@/lib/actions';
-import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore } from '@/firebase/firestore/use-collection';
+import { useUser, useFirestore } from '@/firebase';
 import type { User } from '@/lib/data';
 import { Paperclip, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +30,7 @@ type CreatePostProps = {
 
 export function CreatePost({ user }: CreatePostProps) {
   const { user: authUser } = useUser();
-  const { db } = useFirestore();
+  const db = useFirestore();
   const initialState: CreatePostState = { message: null, errors: {} };
   
   const [state, dispatch] = useActionState(createPostAction, initialState);

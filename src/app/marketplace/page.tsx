@@ -1,19 +1,18 @@
-
 'use client';
 
 import { ItemCard } from "@/components/connect-hub/marketplace/item-card";
 import { SellItemForm } from "@/components/connect-hub/marketplace/sell-item-form";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection } from "@/firebase/firestore/use-collection";
-import { useUser } from "@/firebase/auth/use-user";
+import { useFirestore, useCollection, useUser } from "@/firebase";
 import { Product } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
 import React from 'react';
+import { collection } from 'firebase/firestore';
 
 export default function MarketplacePage() {
-  const { db } = useFirestore();
+  const db = useFirestore();
   const { data: marketplaceItems, loading } = useCollection<Product>(
-    db ? "products" : null
+    db ? collection(db, "products") : null
   );
   const { user } = useUser();
   const [isFormOpen, setIsFormOpen] = React.useState(false);

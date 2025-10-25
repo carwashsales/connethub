@@ -18,8 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { createProductAction, type CreateProductState } from '@/lib/actions';
-import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore } from '@/firebase/firestore/use-collection';
+import { useUser, useFirestore } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
@@ -40,7 +39,7 @@ type SellItemFormProps = {
 
 export function SellItemForm({ isOpen, onOpenChange }: SellItemFormProps) {
   const { user: authUser } = useUser();
-  const { db } = useFirestore();
+  const db = useFirestore();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 

@@ -5,7 +5,7 @@ import { CreatePost } from "@/components/connect-hub/news-feed/create-post";
 import { PostCard } from "@/components/connect-hub/news-feed/post-card";
 import { AdBanner } from "@/components/connect-hub/shared/ad-banner";
 import { users, type Post } from "@/lib/data";
-import { useUser } from '@/firebase/auth/use-user';
+import { useUser } from '@/firebase';
 
 type NewsFeedProps = {
     initialPosts: Post[];

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from '@/components/ui/toaster';
-import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'Connect Hub',
@@ -24,10 +24,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-            <AppLayout>
-              {children}
-            </AppLayout>
-            <Toaster />
+          <AppLayout>
+            {children}
+          </AppLayout>
+          <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>
