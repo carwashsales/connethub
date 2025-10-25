@@ -4,7 +4,8 @@
 import { ItemCard } from "@/components/connect-hub/marketplace/item-card";
 import { SellItemForm } from "@/components/connect-hub/marketplace/sell-item-form";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useUser } from "@/firebase";
+import { useFirestore, useCollection } from "@/firebase/firestore/use-collection";
+import { useUser } from "@/firebase/auth/use-user";
 import { Product } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
 import React from 'react';

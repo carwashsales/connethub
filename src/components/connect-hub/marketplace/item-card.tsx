@@ -3,7 +3,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFirestore, useDoc, useUser } from "@/firebase";
+import { useDoc } from "@/firebase/firestore/use-doc";
+import { useFirestore } from "@/firebase/firestore/use-collection";
+import { useUser } from "@/firebase/auth/use-user";
 import { doc } from "firebase/firestore";
 import type { Product, User } from "@/lib/data";
 import Image from "next/image";
