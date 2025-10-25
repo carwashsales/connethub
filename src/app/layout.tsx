@@ -24,10 +24,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
-          <Toaster />
+            <AppLayout>
+              {children}
+            </AppLayout>
+            <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>

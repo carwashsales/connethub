@@ -1,3 +1,6 @@
+'use client';
+
+import React from 'react';
 import { CreatePost } from "@/components/connect-hub/news-feed/create-post";
 import { PostCard } from "@/components/connect-hub/news-feed/post-card";
 import { AdBanner } from "@/components/connect-hub/shared/ad-banner";
@@ -10,10 +13,10 @@ export default function Home() {
         <CreatePost user={users[0]} />
         <div className="space-y-6">
           {posts.map((post, index) => (
-            <>
+            <React.Fragment key={`${post.id}-${index}`}>
               {index === 2 && <AdBanner id="news-feed-ad" />}
-              <PostCard key={post.id} post={post} />
-            </>
+              <PostCard post={post} />
+            </React.Fragment>
           ))}
         </div>
       </div>
