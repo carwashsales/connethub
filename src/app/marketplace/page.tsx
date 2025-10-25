@@ -4,7 +4,7 @@
 import { ItemCard } from "@/components/connect-hub/marketplace/item-card";
 import { SellItemForm } from "@/components/connect-hub/marketplace/sell-item-form";
 import { Button } from "@/components/ui/button";
-import { useAuth, useFirestore, useCollection } from "@/firebase";
+import { useFirestore, useCollection, useUser } from "@/firebase";
 import { Product } from "@/lib/data";
 import { collection, query, orderBy } from "firebase/firestore";
 import { PlusCircle } from "lucide-react";
@@ -13,9 +13,9 @@ import React from 'react';
 export default function MarketplacePage() {
   const { db } = useFirestore();
   const { data: marketplaceItems, loading } = useCollection<Product>(
-    db ? query(collection(db, "products"), orderBy("createdAt", "desc")) : null
+    db ? "products" : null
   );
-  const { user } = useAuth();
+  const { user } = useUser();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
 
   return (

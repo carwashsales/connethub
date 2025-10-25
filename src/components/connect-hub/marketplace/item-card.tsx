@@ -8,7 +8,7 @@ import { doc } from "firebase/firestore";
 import type { Product, User } from "@/lib/data";
 import Image from "next/image";
 import { MessageSquare } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 
 type ItemCardProps = {
@@ -17,7 +17,8 @@ type ItemCardProps = {
 
 export function ItemCard({ item }: ItemCardProps) {
   const { db } = useFirestore();
-  const { user: authUser } = useAuth();
+  const auth = useAuth();
+  const { user: authUser } = useUser();
   
   const { data: seller } = useDoc<User>(
     db && item.sellerId ? doc(db, 'users', item.sellerId) : null
@@ -61,18 +62,20 @@ export function ItemCard({ item }: ItemCardProps) {
             )}
         </div>
         
-        {(!authUser || authUser.isAnonymous) ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span tabIndex={0}>{contactButton}</span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Please log in to contact seller.</p>
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          contactButton
-        )}
+        <TooltipProvider>
+            {(!authUser || authUser.isAnonymous) ? (
+            <Tooltip>
+                <TooltipTrigger asChild>
+                <span tabIndex={0}>{contactButton}</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                <p>Please log in to contact seller.</p>
+                </TooltipContent>
+            </Tooltip>
+            ) : (
+            contactButton
+            )}
+        </TooltipProvider>
       </CardFooter>
     </Card>
   );
