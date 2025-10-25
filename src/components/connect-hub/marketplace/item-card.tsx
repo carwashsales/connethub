@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth, useFirestore, useDoc } from "@/firebase";
+import { useFirestore, useDoc, useUser } from "@/firebase";
 import { doc } from "firebase/firestore";
 import type { Product, User } from "@/lib/data";
 import Image from "next/image";
@@ -17,7 +17,6 @@ type ItemCardProps = {
 
 export function ItemCard({ item }: ItemCardProps) {
   const { db } = useFirestore();
-  const auth = useAuth();
   const { user: authUser } = useUser();
   
   const { data: seller } = useDoc<User>(

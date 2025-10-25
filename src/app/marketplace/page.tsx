@@ -6,7 +6,6 @@ import { SellItemForm } from "@/components/connect-hub/marketplace/sell-item-for
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useUser } from "@/firebase";
 import { Product } from "@/lib/data";
-import { collection, query, orderBy } from "firebase/firestore";
 import { PlusCircle } from "lucide-react";
 import React from 'react';
 

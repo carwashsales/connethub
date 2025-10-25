@@ -2,24 +2,23 @@
 import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "./sidebar-nav";
 import { Header } from "./header";
-import { FirebaseClientProvider } from "@/firebase/client-provider";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <FirebaseClientProvider>
-      <SidebarProvider>
+    <SidebarProvider>
+      <div className="flex h-screen">
         <Sidebar>
           <SidebarNav />
         </Sidebar>
-        <SidebarInset>
+        <div className="flex flex-col flex-1">
           <Header>
             <SidebarTrigger />
           </Header>
           <main className="flex-1 overflow-y-auto">
             {children}
           </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </FirebaseClientProvider>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
