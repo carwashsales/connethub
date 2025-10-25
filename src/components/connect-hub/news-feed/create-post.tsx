@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { createPostAction, type CreatePostState } from '@/lib/actions';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase/index';
 import type { User } from '@/lib/data';
 import { Paperclip, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
