@@ -1,0 +1,48 @@
+'use client';
+
+import {
+  onSnapshot,
+  Query,
+  DocumentData,
+  FirestoreError,
+  QuerySnapshot,
+} from 'firebase/firestore';
+import { useEffect, useState, useRef } from 'react';
+import { useFirestore } from '../provider';
+
+export const useCollection = <T extends DocumentData>(
+  query: Query<T> | null
+) => {
+  const db = useFirestore();
+  const [data, setData] = useState<T[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<FirestoreError | null>(null);
+
+  const queryRef = useRef(query);
+
+  useEffect(() => {
+    if (!db || !query) {
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      query,
+      (snapshot: QuerySnapshot<T>) => {
+        const docs = snapshot.docs.map(
+          (doc) => ({ ...doc.data(), id: doc.id } as T)
+        );
+        setData(docs);
+        setLoading(false);
+      },
+      (err: FirestoreError) => {
+        setError(err);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [db, queryRef.current]);
+
+  return { data, loading, error };
+};

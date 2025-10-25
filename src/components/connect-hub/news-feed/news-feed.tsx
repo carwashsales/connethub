@@ -22,7 +22,7 @@ export function NewsFeed({ initialPosts }: NewsFeedProps) {
       {currentUser && <CreatePost user={currentUser} />}
       <div className="space-y-6">
         {posts.map((post, index) => (
-          <React.Fragment key={`${post.id}-${index}`}>
+          <React.Fragment key={post.id}>
             {index === 2 && <AdBanner id="news-feed-ad" />}
             <PostCard post={post} />
           </React.Fragment>

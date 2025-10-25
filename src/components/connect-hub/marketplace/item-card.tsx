@@ -3,12 +3,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDoc, useFirestore, useUser } from "@/firebase/index";
+import { useFirestore, useUser } from "@/firebase/index";
 import { doc } from "firebase/firestore";
 import type { Product, User } from "@/lib/data";
 import Image from "next/image";
 import { MessageSquare } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { useDoc } from "@/firebase/firestore/use-doc";
 
 
 type ItemCardProps = {

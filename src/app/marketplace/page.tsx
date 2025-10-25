@@ -3,11 +3,12 @@
 import { ItemCard } from "@/components/connect-hub/marketplace/item-card";
 import { SellItemForm } from "@/components/connect-hub/marketplace/sell-item-form";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useUser } from "@/firebase/index";
+import { useFirestore, useUser } from "@/firebase/index";
 import { Product } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
 import React from 'react';
 import { collection } from 'firebase/firestore';
+import { useCollection } from "@/firebase/firestore/use-collection";
 
 export default function MarketplacePage() {
   const db = useFirestore();
