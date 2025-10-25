@@ -37,18 +37,53 @@ export async function createPostAction(prevState: CreatePostState, formData: For
         message: `Your post could not be published. Reason: ${moderationResult.reason}`,
       };
     }
-    
-    // Here you would typically save the post to a database.
-    // For this example, we'll just log it and revalidate the path.
-    console.log('New post created:', content);
-
   } catch (error) {
-    console.error(error);
+    console.error('Error moderating post:', error);
     return {
-      message: 'An unexpected error occurred while moderating content.',
+      message: 'An unexpected error occurred while creating the post.',
     }
   }
 
+  // The actual database write will be handled on the client.
+  // This action is now only for validation and moderation.
+
   revalidatePath('/');
-  return { message: 'Post created successfully.' };
+  return { message: 'Post validated successfully.' };
+}
+
+
+const CreateProductSchema = z.object({
+  name: z.string().min(1, 'Item name cannot be empty.'),
+  description: z.string().min(1, 'Description cannot be empty.'),
+  price: z.coerce.number().positive('Price must be a positive number.'),
+});
+
+export type CreateProductState = {
+  errors?: {
+    name?: string[];
+    description?: string[];
+    price?: string[];
+  };
+  message?: string | null;
+}
+
+export async function createProductAction(prevState: CreateProductState, formData: FormData): Promise<CreateProductState> {
+  const validatedFields = CreateProductSchema.safeParse({
+    name: formData.get('name'),
+    description: formData.get('description'),
+    price: formData.get('price'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Failed to list item. Please check the fields.',
+    };
+  }
+
+  // The actual database write will be handled on the client.
+  // This action is now only for validation.
+
+  revalidatePath('/marketplace');
+  return { message: 'Item validated successfully!' };
 }

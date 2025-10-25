@@ -1,16 +1,36 @@
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { MarketplaceItem, users } from "@/lib/data";
+import { useAuth } from "@/firebase/auth/use-user";
+import { doc } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
+import { useDoc } from "@/firebase/firestore/use-doc";
+import type { Product, User } from "@/lib/data";
 import Image from "next/image";
 import { MessageSquare } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 type ItemCardProps = {
-  item: MarketplaceItem;
+  item: Product;
 };
 
 export function ItemCard({ item }: ItemCardProps) {
-  const seller = users.find(user => user.id === item.sellerId);
+  const { db } = useFirestore();
+  const { user: authUser } = useAuth();
+  
+  const { data: seller } = useDoc<User>(
+    db && item.sellerId ? doc(db, 'users', item.sellerId) : null
+  );
+
+  const contactButton = (
+    <Button size="sm" variant="ghost" className="text-primary hover:bg-primary/10" disabled={!authUser || authUser.isAnonymous || authUser.uid === item.sellerId}>
+      <MessageSquare className="mr-2 h-4 w-4" />
+      Contact
+    </Button>
+  );
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-lg shadow-lg transition-transform hover:scale-105">
@@ -42,10 +62,19 @@ export function ItemCard({ item }: ItemCardProps) {
                 </>
             )}
         </div>
-        <Button size="sm" variant="ghost" className="text-primary hover:bg-primary/10">
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Contact
-        </Button>
+        
+        {(!authUser || authUser.isAnonymous) ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0}>{contactButton}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Please log in to contact seller.</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          contactButton
+        )}
       </CardFooter>
     </Card>
   );

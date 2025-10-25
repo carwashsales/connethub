@@ -1,21 +1,25 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import React, { useEffect, useRef } from 'react';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { createPostAction, type CreatePostState } from '@/lib/actions';
+import { useAuth } from '@/firebase/auth/use-user';
 import type { User } from '@/lib/data';
-import { Paperclip, Send } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { Paperclip, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore } from '@/firebase/index';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="bg-accent text-accent-foreground hover:bg-accent/90">
-      <Send className="mr-2 h-4 w-4" />
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
       {pending ? 'Posting...' : 'Post'}
     </Button>
   );
@@ -26,8 +30,11 @@ type CreatePostProps = {
 };
 
 export function CreatePost({ user }: CreatePostProps) {
+  const { user: authUser } = useAuth();
+  const { db } = useFirestore();
   const initialState: CreatePostState = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(createPostAction, initialState);
+  
+  const [state, dispatch] = useActionState(createPostAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
 
@@ -39,15 +46,38 @@ export function CreatePost({ user }: CreatePostProps) {
           description: state.message,
           variant: 'destructive',
         });
-      } else {
-        toast({
-          title: 'Success',
-          description: state.message,
-        });
-        formRef.current?.reset();
+      } else if (state.message.includes('validated')) {
+        // Validation was successful, now add to DB
+        const content = formRef.current?.content.value;
+        if (content && authUser && db) {
+            addDoc(collection(db, 'posts'), {
+                authorId: authUser.uid,
+                content: content,
+                likes: 0,
+                comments: 0,
+                timestamp: serverTimestamp(),
+            }).then(() => {
+                toast({
+                    title: 'Success',
+                    description: 'Post created successfully.',
+                });
+                formRef.current?.reset();
+            }).catch((error) => {
+                console.error("Error writing document: ", error);
+                toast({
+                    title: 'Database Error',
+                    description: 'Could not save post to the database.',
+                    variant: 'destructive',
+                });
+            });
+        }
       }
     }
-  }, [state, toast]);
+  }, [state, toast, authUser, db]);
+  
+  if (!authUser || authUser.isAnonymous) {
+    return null;
+  }
 
   return (
     <Card className="shadow-sm">
@@ -55,8 +85,8 @@ export function CreatePost({ user }: CreatePostProps) {
         <form action={dispatch} ref={formRef}>
           <div className="flex items-start gap-4">
             <Avatar>
-              <AvatarImage src={user.avatar.url} alt={user.name} data-ai-hint={user.avatar.hint} />
-              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user?.avatar?.url} alt={user?.name} data-ai-hint={user?.avatar?.hint} />
+              <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="w-full">
               <Textarea
@@ -64,6 +94,7 @@ export function CreatePost({ user }: CreatePostProps) {
                 placeholder="What's on your mind?"
                 className="w-full border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 shadow-none min-h-[60px]"
                 aria-describedby="content-error"
+                required
               />
               <div id="content-error" aria-live="polite" aria-atomic="true">
                 {state.errors?.content &&
