@@ -18,9 +18,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { createProductAction, type CreateProductState } from '@/lib/actions';
-import { useAuth } from '@/firebase/auth/use-user';
+import { useAuth, useFirestore } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import { useFirestore } from '@/firebase/index';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 function SubmitButton() {

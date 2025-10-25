@@ -3,10 +3,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/firebase/auth/use-user";
+import { useAuth, useFirestore, useDoc } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { useFirestore } from "@/firebase";
-import { useDoc } from "@/firebase/firestore/use-doc";
 import type { Product, User } from "@/lib/data";
 import Image from "next/image";
 import { MessageSquare } from "lucide-react";

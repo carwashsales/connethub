@@ -8,11 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { createPostAction, type CreatePostState } from '@/lib/actions';
-import { useAuth } from '@/firebase/auth/use-user';
+import { useAuth, useFirestore } from '@/firebase';
 import type { User } from '@/lib/data';
 import { Paperclip, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase/index';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 function SubmitButton() {
