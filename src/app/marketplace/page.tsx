@@ -7,13 +7,13 @@ import { useFirestore, useUser } from "@/firebase/index";
 import { Product } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
 import React from 'react';
-import { collection } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { useCollection } from "@/firebase/firestore/use-collection";
 
 export default function MarketplacePage() {
   const db = useFirestore();
   const { data: marketplaceItems, loading } = useCollection<Product>(
-    db ? collection(db, "products") : null
+    db ? query(collection(db, "products"), orderBy("createdAt", "desc")) : null
   );
   const { user } = useUser();
   const [isFormOpen, setIsFormOpen] = React.useState(false);

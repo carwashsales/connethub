@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useUser } from "@/firebase/index";
 import { doc } from "firebase/firestore";
-import type { Product, User } from "@/lib/data";
+import type { Product } from "@/lib/data";
 import Image from "next/image";
 import { MessageSquare } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { useDoc } from "@/firebase/firestore/use-doc";
+import type { UserProfile } from "@/lib/types";
 
 
 type ItemCardProps = {
@@ -20,7 +21,7 @@ export function ItemCard({ item }: ItemCardProps) {
   const  db  = useFirestore();
   const { user: authUser } = useUser();
   
-  const { data: seller } = useDoc<User>(
+  const { data: seller } = useDoc<UserProfile>(
     db && item.sellerId ? doc(db, 'users', item.sellerId) : null
   );
 

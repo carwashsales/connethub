@@ -1,4 +1,6 @@
 import { PlaceHolderImages } from './placeholder-images';
+import type { UserProfile, Product, Post as PostType, LostFoundItem as LostFoundItemType, Conversation as ConversationType, Message as MessageType } from './types';
+
 
 const findImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
@@ -10,51 +12,12 @@ export type User = {
   email: string;
 };
 
-export type Post = {
-  id: string;
-  authorId: string;
-  content: string;
-  image?: { url: string; hint: string };
-  timestamp: string;
-  likes: number;
-  comments: number;
-};
+export type Post = PostType;
+export type Product = Product;
+export type LostFoundItem = LostFoundItemType;
+export type Conversation = ConversationType;
+export type Message = MessageType;
 
-export type MarketplaceItem = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  sellerId: string;
-  image: { url: string; hint: string };
-};
-
-export type LostFoundItem = {
-  id: string;
-  type: 'lost' | 'found';
-  name: string;
-  description: string;
-  location: string;
-  date: string;
-  contact: string;
-  image: { url: string; hint: string };
-};
-
-export type Conversation = {
-  id: string;
-  userId: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-};
-
-export type Message = {
-  id: string;
-  text: string;
-  timestamp: string;
-  senderId: string;
-  isRead: boolean;
-};
 
 export const users: User[] = [
   { id: 'user-1', name: 'Sarah Miller', avatar: { url: findImage('user-1')?.imageUrl!, hint: findImage('user-1')?.imageHint! }, bio: 'Community gardener and book lover.', email: 'sarah.m@example.com' },
@@ -94,14 +57,6 @@ export const posts: Post[] = [
   },
 ];
 
-export const marketplaceItems: MarketplaceItem[] = [
-  { id: 'item-1', name: 'Vintage Bicycle', description: 'Classic cruiser bicycle in great condition. Recently tuned up.', price: 150, sellerId: 'user-3', image: { url: findImage('marketplace-item-1')?.imageUrl!, hint: findImage('marketplace-item-1')?.imageHint! } },
-  { id: 'item-2', name: 'Handmade Wooden Chair', description: 'Solid oak chair, perfect for a study or reading nook.', price: 250, sellerId: 'user-4', image: { url: findImage('marketplace-item-2')?.imageUrl!, hint: findImage('marketplace-item-2')?.imageHint! } },
-  { id: 'item-3', name: 'Acoustic Guitar', description: 'Yamaha acoustic guitar with a warm tone. Comes with a soft case.', price: 180, sellerId: 'user-2', image: { url: findImage('marketplace-item-3')?.imageUrl!, hint: findImage('marketplace-item-3')?.imageHint! } },
-  { id: 'item-4', name: 'Set of Classic Novels', description: 'A collection of 10 classic literature paperbacks.', price: 40, sellerId: 'user-1', image: { url: findImage('marketplace-item-4')?.imageUrl!, hint: findImage('marketplace-item-4')?.imageHint! } },
-  { id: 'item-5', name: 'Leather Backpack', description: 'Stylish and durable leather backpack. Barely used.', price: 75, sellerId: 'user-5', image: { url: findImage('marketplace-item-5')?.imageUrl!, hint: findImage('marketplace-item-5')?.imageHint! } },
-  { id: 'item-6', name: 'Ceramic Plant Pot', description: 'Large ceramic pot with a unique glaze. Perfect for indoor plants.', price: 30, sellerId: 'user-1', image: { url: findImage('marketplace-item-6')?.imageUrl!, hint: findImage('marketplace-item-6')?.imageHint! } },
-];
 
 export const lostFoundItems: LostFoundItem[] = [
   { id: 'lf-1', type: 'lost', name: 'Set of keys', description: 'A set of three keys on a green carabiner. Lost somewhere near the central park.', location: 'Central Park', date: '2024-07-20', contact: 'Contact John D.', image: { url: findImage('lost-item-1')?.imageUrl!, hint: findImage('lost-item-1')?.imageHint! } },
