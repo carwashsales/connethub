@@ -83,33 +83,32 @@ export function SidebarNav({ user }: { user: UserProfile | null }) {
               </div>
             </div>
           ) : authUser && user ? (
-             <>
-                <div className="flex items-center justify-between">
-                    <SidebarMenuItem className="flex-1">
-                        <SidebarMenuButton asChild isActive={pathname.startsWith('/profile')} tooltip="Profile">
-                            <Link href="/profile" className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage src={user.avatar?.url} alt={user.name} data-ai-hint={user.avatar?.hint} />
-                                    <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
-                                </Avatar>
+             <SidebarMenuItem>
+                <div className="flex items-center justify-between w-full">
+                    <SidebarMenuButton asChild isActive={pathname.startsWith('/profile')} tooltip="Profile" variant="ghost" className="flex-1 justify-start h-auto p-1">
+                        <Link href="/profile" className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.avatar?.url} alt={user.name} data-ai-hint={user.avatar?.hint} />
+                                <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                             <div className="flex flex-col items-start text-left">
+                                <span className="text-sm font-medium">{user.name}</span>
+                                <span className="text-xs text-muted-foreground">View Profile</span>
+                             </div>
+                        </Link>
+                    </SidebarMenuButton>
+                    <div className="flex items-center">
+                        <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip="Settings" size="icon" variant="ghost">
+                            <Link href="/settings">
+                                <Settings />
                             </Link>
                         </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip="Settings">
-                        <Link href="/settings">
-                            <Settings />
-                        </Link>
+                        <SidebarMenuButton onClick={handleLogout} tooltip="Log Out" size="icon" variant="ghost" className="text-destructive hover:text-destructive">
+                            <LogOut />
                         </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    </div>
                 </div>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} tooltip={`Log Out ${user.name}`}>
-                    <LogOut />
-                    <span>Log Out {user.name}</span>
-                </SidebarMenuButton>
               </SidebarMenuItem>
-             </>
           ) : (
             <>
               <SidebarMenuItem>
