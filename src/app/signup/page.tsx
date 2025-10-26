@@ -48,7 +48,6 @@ export default function SignupPage() {
       await createUserProfile(userCredential.user, name);
       toast({ title: 'Success', description: 'Account created successfully!' });
       // The AuthWrapper will handle the redirection.
-      // router.push('/');
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -69,7 +68,6 @@ export default function SignupPage() {
       await createUserProfile(userCredential.user);
       toast({ title: 'Success', description: 'Account created successfully!' });
       // The AuthWrapper will handle the redirection.
-      // router.push('/');
     } catch (error: any) {
       toast({
         title: 'Error',
