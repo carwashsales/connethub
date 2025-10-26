@@ -4,15 +4,34 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useUser } from "@/firebase/index";
-import { doc, getDocs, query, collection, where, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDocs, query, collection, where, addDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import type { Product } from "@/lib/data";
 import Image from "next/image";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import type { UserProfile } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState, useMemo } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import { SellItemForm } from "./sell-item-form";
 
 
 type ItemCardProps = {
@@ -23,6 +42,12 @@ export function ItemCard({ item }: ItemCardProps) {
   const  db  = useFirestore();
   const { user: authUser } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
+  
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+
+  const isSeller = useMemo(() => authUser && authUser.uid === item.sellerId, [authUser, item.sellerId]);
   
   const { data: seller } = useDoc<UserProfile>(
     db && item.sellerId ? doc(db, 'users', item.sellerId) : null
@@ -58,6 +83,19 @@ export function ItemCard({ item }: ItemCardProps) {
     }
   };
 
+  const handleDelete = async () => {
+      if(!db || !isSeller) return;
+      const itemRef = doc(db, 'products', item.id);
+      try {
+        await deleteDoc(itemRef);
+        toast({ title: "Success", description: "Item deleted." });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to delete item.", variant: "destructive" });
+        console.error(error);
+      }
+      setIsDeleteAlertOpen(false);
+  }
+
   const contactButton = (
     <Button 
       size="sm" 
@@ -72,8 +110,9 @@ export function ItemCard({ item }: ItemCardProps) {
   );
 
   return (
+    <>
     <Card className="flex flex-col overflow-hidden rounded-lg shadow-lg transition-transform hover:scale-105">
-      <CardHeader className="p-0">
+      <CardHeader className="p-0 relative">
         <div className="relative h-48 w-full">
             <Image
             src={item.image.url}
@@ -83,6 +122,27 @@ export function ItemCard({ item }: ItemCardProps) {
             data-ai-hint={item.image.hint}
             />
         </div>
+        {isSeller && (
+            <div className="absolute top-2 right-2">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-background/70 hover:bg-background">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setIsEditFormOpen(true)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setIsDeleteAlertOpen(true)} className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        )}
       </CardHeader>
       <CardContent className="flex-grow p-4">
         <CardTitle className="font-headline text-lg mb-2">{item.name}</CardTitle>
@@ -118,10 +178,28 @@ export function ItemCard({ item }: ItemCardProps) {
                 </TooltipContent>
             </Tooltip>
             ) : (
-            contactButton
+             !isSeller && contactButton
             )}
         </TooltipProvider>
       </CardFooter>
     </Card>
+
+    <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your marketplace listing.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
+    {isSeller && <SellItemForm isOpen={isEditFormOpen} onOpenChange={setIsEditFormOpen} itemToEdit={item} />}
+    </>
   );
 }

@@ -1,18 +1,66 @@
+'use client';
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LostFoundItem } from "@/lib/types";
-import { MapPin, Calendar, Phone } from "lucide-react";
+import { MapPin, Calendar, Phone, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { formatDistanceToNow } from 'date-fns';
+import { useUser, useFirestore } from "@/firebase/index";
+import { useMemo, useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { doc, deleteDoc } from "firebase/firestore";
+import { PostLostFoundItemForm } from "./post-lost-found-item-form";
+
 
 type ItemCardProps = {
   item: LostFoundItem;
 };
 
 export function ItemCard({ item }: ItemCardProps) {
+  const { user: authUser } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
+
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  
+  const isOwner = useMemo(() => authUser && authUser.uid === item.userId, [authUser, item.userId]);
   const date = item.createdAt?.toDate ? formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true }) : 'Just now';
 
+  const handleDelete = async () => {
+      if(!db || !isOwner) return;
+      const itemRef = doc(db, 'lostAndFoundItems', item.id);
+      try {
+        await deleteDoc(itemRef);
+        toast({ title: "Success", description: "Item has been deleted." });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to delete item.", variant: "destructive" });
+        console.error(error);
+      }
+      setIsDeleteAlertOpen(false);
+  }
+
+
   return (
+    <>
     <Card className="overflow-hidden shadow-sm transition-shadow hover:shadow-md">
       <div className="flex flex-col sm:flex-row">
         <div className="relative h-48 sm:h-auto sm:w-1/3 md:w-1/4 flex-shrink-0">
@@ -28,9 +76,30 @@ export function ItemCard({ item }: ItemCardProps) {
           <CardHeader>
             <div className="flex justify-between items-start">
               <CardTitle className="font-headline text-xl">{item.name}</CardTitle>
-              <Badge variant={item.type === 'lost' ? 'destructive' : 'secondary'} className="capitalize bg-primary text-primary-foreground">
-                {item.type}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant={item.type === 'lost' ? 'destructive' : 'secondary'} className="capitalize bg-primary text-primary-foreground">
+                  {item.type}
+                </Badge>
+                {isOwner && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setIsEditFormOpen(true)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setIsDeleteAlertOpen(true)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -53,5 +122,23 @@ export function ItemCard({ item }: ItemCardProps) {
         </div>
       </div>
     </Card>
+
+    <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete this item.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    
+    {isOwner && <PostLostFoundItemForm isOpen={isEditFormOpen} onOpenChange={setIsEditFormOpen} itemToEdit={item} />}
+    </>
   );
 }

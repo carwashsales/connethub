@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,21 +17,31 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase/index';
 import { Loader2 } from 'lucide-react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import type { LostFoundItem } from '@/lib/types';
+
 
 type PostLostFoundItemFormProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  itemToEdit?: LostFoundItem;
 };
 
-export function PostLostFoundItemForm({ isOpen, onOpenChange }: PostLostFoundItemFormProps) {
+export function PostLostFoundItemForm({ isOpen, onOpenChange, itemToEdit }: PostLostFoundItemFormProps) {
   const { user: authUser } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
-  const [itemType, setItemType] = useState<'lost' | 'found'>('lost');
+  const [itemType, setItemType] = useState<'lost' | 'found'>(itemToEdit?.type || 'lost');
+  const isEdit = !!itemToEdit;
+
+  useEffect(() => {
+    if (itemToEdit) {
+      setItemType(itemToEdit.type);
+    }
+  }, [itemToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,36 +66,45 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange }: PostLostFoundIte
     }
 
     try {
-      const imageUrl = `https://picsum.photos/seed/${Math.random()}/600/400`;
-      const imageHint = 'item';
+      if (isEdit && itemToEdit) {
+        const itemRef = doc(db, 'lostAndFoundItems', itemToEdit.id);
+        await updateDoc(itemRef, {
+            name,
+            description,
+            type: itemType,
+            location,
+            contact,
+        });
+        toast({ title: 'Success!', description: 'Item updated successfully!' });
+      } else {
+        const imageUrl = `https://picsum.photos/seed/${Math.random()}/600/400`;
+        const imageHint = 'item';
 
-      await addDoc(collection(db, 'lostAndFoundItems'), {
-        userId: authUser.uid,
-        name,
-        description,
-        type: itemType,
-        location,
-        contact,
-        image: {
-            url: imageUrl,
-            hint: imageHint,
-        },
-        createdAt: serverTimestamp(),
-      });
+        await addDoc(collection(db, 'lostAndFoundItems'), {
+          userId: authUser.uid,
+          name,
+          description,
+          type: itemType,
+          location,
+          contact,
+          image: {
+              url: imageUrl,
+              hint: imageHint,
+          },
+          createdAt: serverTimestamp(),
+        });
+        toast({ title: 'Success!', description: 'Item posted successfully!' });
+      }
       
-      toast({
-        title: 'Success!',
-        description: 'Item posted successfully!',
-      });
       formRef.current?.reset();
       setItemType('lost');
       onOpenChange(false);
 
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error writing document: ", error);
       toast({
         title: 'Database Error',
-        description: 'Could not post item.',
+        description: `Could not ${isEdit ? 'update' : 'post'} item.`,
         variant: 'destructive',
       });
     } finally {
@@ -97,9 +116,9 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange }: PostLostFoundIte
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="font-headline">Report an Item</DialogTitle>
+          <DialogTitle className="font-headline">{isEdit ? 'Edit Item' : 'Report an Item'}</DialogTitle>
           <DialogDescription>
-            Fill out the details below to post a lost or found item.
+            {isEdit ? 'Update the details of your item.' : 'Fill out the details below to post a lost or found item.'}
           </DialogDescription>
         </DialogHeader>
         <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4 py-4">
@@ -107,7 +126,7 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange }: PostLostFoundIte
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Type</Label>
             <RadioGroup
-              defaultValue="lost"
+              defaultValue={itemType}
               className="col-span-3 flex gap-4"
               value={itemType}
               onValueChange={(value: 'lost' | 'found') => setItemType(value)}
@@ -127,28 +146,28 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange }: PostLostFoundIte
             <Label htmlFor="name" className="text-right">
               Item Name
             </Label>
-            <Input id="name" name="name" className="col-span-3" required />
+            <Input id="name" name="name" className="col-span-3" required defaultValue={itemToEdit?.name} />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Description
             </Label>
-            <Textarea id="description" name="description" className="col-span-3" required />
+            <Textarea id="description" name="description" className="col-span-3" required defaultValue={itemToEdit?.description} />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="location" className="text-right">
               Location
             </Label>
-            <Input id="location" name="location" placeholder="e.g., Central Park" className="col-span-3" required />
+            <Input id="location" name="location" placeholder="e.g., Central Park" className="col-span-3" required defaultValue={itemToEdit?.location} />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="contact" className="text-right">
               Contact Info
             </Label>
-            <Input id="contact" name="contact" placeholder="e.g., Your phone or email" className="col-span-3" required />
+            <Input id="contact" name="contact" placeholder="e.g., Your phone or email" className="col-span-3" required defaultValue={itemToEdit?.contact} />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
@@ -169,7 +188,7 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange }: PostLostFoundIte
             </DialogClose>
             <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? 'Posting...' : 'Post Item'}
+              {loading ? (isEdit ? 'Saving...' : 'Posting...') : (isEdit ? 'Save Changes' : 'Post Item')}
             </Button>
           </DialogFooter>
         </form>
