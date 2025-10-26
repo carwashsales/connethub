@@ -96,7 +96,7 @@ export function SidebarNav() {
           ) : authUser && currentUser ? (
              <>
               <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname === '/profile'} tooltip="Profile">
+                  <SidebarMenuButton asChild isActive={pathname.startsWith('/profile')} tooltip="Profile">
                       <Link href="/profile" className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
                               <AvatarImage src={currentUser.avatar?.url} alt={currentUser.name} data-ai-hint={currentUser.avatar?.hint} />
@@ -138,8 +138,8 @@ export function SidebarNav() {
           )}
 
            <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Settings">
-              <Link href="#">
+            <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip="Settings">
+              <Link href="/settings">
                 <Settings />
                 <span>Settings</span>
               </Link>
