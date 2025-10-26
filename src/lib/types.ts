@@ -48,16 +48,15 @@ export type LostFoundItem = {
 
 export type Conversation = {
   id: string;
-  userId: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
+  participantIds: string[];
+  participants: { [key: string]: UserProfile };
+  lastMessageText?: string;
+  lastMessageAt?: any;
 };
 
 export type Message = {
   id: string;
   text: string;
-  timestamp: string;
+  createdAt: any;
   senderId: string;
-  isRead: boolean;
 };

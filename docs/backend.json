@@ -148,6 +148,47 @@
         }
       },
       "required": ["authorId", "content", "likes", "comments", "createdAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "A private chat between two or more users.",
+      "type": "object",
+      "properties": {
+        "participantIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of user UIDs participating in the conversation."
+        },
+        "lastMessageText": {
+          "type": "string",
+          "description": "The text of the last message sent in the conversation."
+        },
+        "lastMessageAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["participantIds", "lastMessageAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A single message within a conversation.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "senderId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["text", "senderId", "createdAt"]
     }
   },
   "auth": {
@@ -177,6 +218,18 @@
         "$ref": "#/entities/Post"
       },
       "description": "Contains all the posts for the news feed."
+    },
+    "/conversations/{conversationId}": {
+      "schema": {
+        "$ref": "#/entities/Conversation"
+      },
+      "description": "Contains all conversations between users."
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+        "schema": {
+            "$ref": "#/entities/Message"
+        },
+        "description": "Contains all messages within a conversation."
     }
   }
 }
