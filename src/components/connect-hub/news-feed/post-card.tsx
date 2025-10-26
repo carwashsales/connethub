@@ -3,12 +3,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Post, User } from "@/lib/data";
+import { Post, UserProfile as User } from "@/lib/types";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 import Image from "next/image";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { doc } from 'firebase/firestore';
 import { useFirestore } from "@/firebase/index";
+import { formatDistanceToNow } from 'date-fns';
+
 
 type PostCardProps = {
   post: Post;
@@ -20,22 +22,27 @@ export function PostCard({ post }: PostCardProps) {
     db && post.authorId ? doc(db, 'users', post.authorId) : null
   );
 
+  const date = post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now';
+
+
   return (
     <Card className="shadow-sm overflow-hidden">
       <CardHeader className="p-4 flex flex-row items-center gap-3">
-        {author && (
+        {author ? (
             <Avatar>
                 <AvatarImage src={author.avatar.url} alt={author.name} data-ai-hint={author.avatar.hint} />
                 <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
             </Avatar>
+        ): (
+          <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
         )}
         <div className="flex-1">
-          <p className="font-semibold">{author?.name}</p>
-          <p className="text-xs text-muted-foreground">{post.timestamp}</p>
+          <p className="font-semibold">{author?.name || 'Loading...'}</p>
+          <p className="text-xs text-muted-foreground">{date}</p>
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-2">
-        <p className="text-sm">{post.content}</p>
+        <p className="text-sm whitespace-pre-wrap">{post.content}</p>
       </CardContent>
       {post.image && (
         <div className="relative h-64 md:h-80 w-full mt-2">

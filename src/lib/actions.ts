@@ -3,6 +3,10 @@
 import { z } from 'zod';
 import { moderateContent } from '@/ai/flows/automated-content-moderation';
 import { revalidatePath } from 'next/cache';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase';
+
 
 const CreatePostSchema = z.object({
   content: z.string().min(1, 'Post content cannot be empty.').max(500, 'Post content is too long.'),

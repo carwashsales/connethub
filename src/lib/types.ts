@@ -29,7 +29,7 @@ export type Post = {
   authorId: string;
   content: string;
   image?: { url: string; hint: string };
-  timestamp: string;
+  createdAt: any;
   likes: number;
   comments: number;
 };

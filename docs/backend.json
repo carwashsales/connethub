@@ -113,6 +113,41 @@
         }
       },
       "required": ["name", "description", "type", "location", "contact", "userId", "image", "createdAt"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "A post in the news feed.",
+      "type": "object",
+      "properties": {
+        "authorId": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "image": {
+           "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "hint": {
+              "type": "string"
+            }
+          }
+        },
+        "likes": {
+          "type": "number"
+        },
+        "comments": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["authorId", "content", "likes", "comments", "createdAt"]
     }
   },
   "auth": {
@@ -136,6 +171,12 @@
             "$ref": "#/entities/LostAndFoundItem"
         },
         "description": "Contains all the lost and found items."
+    },
+    "/posts/{postId}": {
+      "schema": {
+        "$ref": "#/entities/Post"
+      },
+      "description": "Contains all the posts for the news feed."
     }
   }
 }

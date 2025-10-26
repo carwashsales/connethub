@@ -1,30 +1,23 @@
 import { PlaceHolderImages } from './placeholder-images';
-import type { UserProfile, Product, Post as PostType, LostFoundItem as LostFoundItemType, Conversation as ConversationType, Message as MessageType } from './types';
+import type { UserProfile, Product as ProductType, Post as PostType, LostFoundItem as LostFoundItemType, Conversation as ConversationType, Message as MessageType } from './types';
 
 
 const findImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
-export type User = {
-  id: string;
-  name: string;
-  avatar: { url: string; hint: string };
-  bio: string;
-  email: string;
-};
-
+export type User = UserProfile;
 export type Post = PostType;
-export type Product = Product;
+export type Product = ProductType;
 export type LostFoundItem = LostFoundItemType;
 export type Conversation = ConversationType;
 export type Message = MessageType;
 
 
 export const users: User[] = [
-  { id: 'user-1', name: 'Sarah Miller', avatar: { url: findImage('user-1')?.imageUrl!, hint: findImage('user-1')?.imageHint! }, bio: 'Community gardener and book lover.', email: 'sarah.m@example.com' },
-  { id: 'user-2', name: 'John Davis', avatar: { url: findImage('user-2')?.imageUrl!, hint: findImage('user-2')?.imageHint! }, bio: 'Local musician and coffee enthusiast.', email: 'john.d@example.com' },
-  { id: 'user-3', name: 'Emily White', avatar: { url: findImage('user-3')?.imageUrl!, hint: findImage('user-3')?.imageHint! }, bio: 'Tech student and avid hiker.', email: 'emily.w@example.com' },
-  { id: 'user-4', name: 'Michael Brown', avatar: { url: findImage('user-4')?.imageUrl!, hint: findImage('user-4')?.imageHint! }, bio: 'Retired teacher, enjoys reading and chess.', email: 'michael.b@example.com' },
-  { id: 'user-5', name: 'Jessica Green', avatar: { url: findImage('user-5')?.imageUrl!, hint: findImage('user-5')?.imageHint! }, bio: 'Freelance graphic designer.', email: 'jessica.g@example.com' },
+  { id: 'user-1', uid: 'user-1', name: 'Sarah Miller', avatar: { url: findImage('user-1')?.imageUrl!, hint: findImage('user-1')?.imageHint! }, bio: 'Community gardener and book lover.', email: 'sarah.m@example.com' },
+  { id: 'user-2', uid: 'user-2', name: 'John Davis', avatar: { url: findImage('user-2')?.imageUrl!, hint: findImage('user-2')?.imageHint! }, bio: 'Local musician and coffee enthusiast.', email: 'john.d@example.com' },
+  { id: 'user-3', uid: 'user-3', name: 'Emily White', avatar: { url: findImage('user-3')?.imageUrl!, hint: findImage('user-3')?.imageHint! }, bio: 'Tech student and avid hiker.', email: 'emily.w@example.com' },
+  { id: 'user-4', uid: 'user-4', name: 'Michael Brown', avatar: { url: findImage('user-4')?.imageUrl!, hint: findImage('user-4')?.imageHint! }, bio: 'Retired teacher, enjoys reading and chess.', email: 'michael.b@example.com' },
+  { id: 'user-5', uid: 'user-5', name: 'Jessica Green', avatar: { url: findImage('user-5')?.imageUrl!, hint: findImage('user-5')?.imageHint! }, bio: 'Freelance graphic designer.', email: 'jessica.g@example.com' },
 ];
 
 export const posts: Post[] = [
@@ -33,7 +26,7 @@ export const posts: Post[] = [
     authorId: 'user-1',
     content: 'Just spent a wonderful morning at the community garden! The tomatoes are finally starting to ripen. 🍅',
     image: { url: findImage('post-image-1')?.imageUrl!, hint: findImage('post-image-1')?.imageHint! },
-    timestamp: '2h ago',
+    createdAt: '2h ago',
     likes: 42,
     comments: 8,
   },
@@ -42,7 +35,7 @@ export const posts: Post[] = [
     authorId: 'user-2',
     content: 'Discovered a new local gem, "The Daily Grind". Their espresso is fantastic! Highly recommend.',
     image: { url: findImage('post-image-2')?.imageUrl!, hint: findImage('post-image-2')?.imageHint! },
-    timestamp: '5h ago',
+    createdAt: '5h ago',
     likes: 89,
     comments: 15,
   },
@@ -51,7 +44,7 @@ export const posts: Post[] = [
     authorId: 'user-4',
     content: 'Our book club had a lively discussion about "The Midnight Library" last night. What an interesting concept! What are your thoughts?',
     image: { url: findImage('post-image-3')?.imageUrl!, hint: findImage('post-image-3')?.imageHint! },
-    timestamp: '1d ago',
+    createdAt: '1d ago',
     likes: 35,
     comments: 12,
   },
