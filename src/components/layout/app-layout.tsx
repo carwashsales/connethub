@@ -1,14 +1,15 @@
 
-import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar } from "@/components/ui/sidebar";
 import { SidebarNav } from "./sidebar-nav";
 import { Header } from "./header";
+import type { UserProfile } from "@/lib/types";
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppLayout({ children, user }: { children: React.ReactNode, user: UserProfile | null }) {
   return (
     <SidebarProvider>
       <div className="flex h-screen">
         <Sidebar>
-          <SidebarNav />
+          <SidebarNav user={user} />
         </Sidebar>
         <div className="flex flex-col flex-1">
           <Header>

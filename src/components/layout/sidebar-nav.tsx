@@ -10,16 +10,13 @@ import {
   SidebarGroup,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { Home, Store, Search, MessageSquare, UserCircle2, Settings, LogIn, LogOut, UserPlus } from 'lucide-react';
+import { Home, Store, Search, MessageSquare, Settings, LogIn, LogOut, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { AdBanner } from '../connect-hub/shared/ad-banner';
-import { useAuth, useUser, useFirestore } from '@/firebase/index';
-import { useDoc } from '@/firebase/firestore/use-doc';
-import { doc } from 'firebase/firestore';
-import { useMemo } from 'react';
+import { useAuth, useUser } from '@/firebase/index';
 import { Skeleton } from '../ui/skeleton';
 
 const navItems = [
@@ -29,21 +26,11 @@ const navItems = [
   { href: '/messages', label: 'Messages', icon: MessageSquare },
 ];
 
-export function SidebarNav() {
+export function SidebarNav({ user }: { user: UserProfile | null }) {
   const pathname = usePathname();
   const { user: authUser, loading: authLoading } = useUser();
-  const db = useFirestore();
   const auth = useAuth();
   const router = useRouter();
-
-  const currentUserDocRef = useMemo(() => {
-    if (!db || !authUser) return null;
-    return doc(db, 'users', authUser.uid);
-  }, [db, authUser]);
-
-  const { data: currentUser, loading: userLoading } = useDoc<UserProfile>(currentUserDocRef);
-  
-  const loading = authLoading || (authUser && userLoading);
 
   const handleLogout = async () => {
     if (auth) {
@@ -87,7 +74,7 @@ export function SidebarNav() {
       <SidebarFooter className='p-2'>
         <Separator className="my-2" />
         <SidebarMenu>
-          {loading ? (
+          {authLoading ? (
             <div className="flex items-center gap-3 p-2">
               <Skeleton className="h-8 w-8 rounded-full" />
               <div className='flex flex-col gap-1'>
@@ -95,21 +82,29 @@ export function SidebarNav() {
                  <Skeleton className="h-3 w-16 rounded" />
               </div>
             </div>
-          ) : authUser && currentUser ? (
+          ) : authUser && user ? (
              <>
               <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={pathname.startsWith('/profile')} tooltip="Profile">
                       <Link href="/profile" className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                              <AvatarImage src={currentUser.avatar?.url} alt={currentUser.name} data-ai-hint={currentUser.avatar?.hint} />
-                              <AvatarFallback>{currentUser.name?.charAt(0)}</AvatarFallback>
+                              <AvatarImage src={user.avatar?.url} alt={user.name} data-ai-hint={user.avatar?.hint} />
+                              <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
-                              <span className="font-semibold">{currentUser.name}</span>
+                              <span className="font-semibold">{user.name}</span>
                               <span className="text-xs text-muted-foreground">View Profile</span>
                           </div>
                       </Link>
                   </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip="Settings">
+                  <Link href="/settings">
+                    <Settings />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={handleLogout} tooltip="Log Out">
@@ -138,15 +133,6 @@ export function SidebarNav() {
               </SidebarMenuItem>
             </>
           )}
-
-           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip="Settings">
-              <Link href="/settings">
-                <Settings />
-                <span>Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </>

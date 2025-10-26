@@ -1,9 +1,12 @@
 'use client';
 
-import { useUser } from '@/firebase/index';
+import { useFirestore, useUser } from '@/firebase/index';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { AppLayout } from './app-layout';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { doc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
 
 function FullPageLoader() {
     return (
@@ -28,18 +31,28 @@ function FullPageLoader() {
 
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useUser();
+  const { user: authUser, loading: authLoading } = useUser();
   const router = useRouter();
+  const db = useFirestore();
+
+  const userDocRef = useMemo(() => {
+    if (!db || !authUser) return null;
+    return doc(db, 'users', authUser.uid);
+  }, [db, authUser]);
+
+  const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !authUser) {
       router.replace('/login');
     }
-  }, [loading, user, router]);
+  }, [authLoading, authUser, router]);
 
-  if (loading || !user) {
+  const isLoading = authLoading || (authUser && userProfileLoading);
+
+  if (isLoading || !authUser) {
     return <FullPageLoader />;
   }
 
-  return <AppLayout>{children}</AppLayout>;
+  return <AppLayout user={userProfile}>{children}</AppLayout>;
 }
