@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send, ArrowLeft } from "lucide-react";
+import { Search, Send, ArrowLeft, MessageCircle } from "lucide-react";
 import type { Conversation, Message, UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useFirestore, useUser } from "@/firebase/index";
@@ -69,7 +69,11 @@ function ChatMessages({ conversation, currentUser }: { conversation: Conversatio
         })
       ) : (
          <div className="flex h-full items-center justify-center text-muted-foreground">
-            <p>No messages yet. Start the conversation!</p>
+            <div className="text-center">
+              <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <h3 className="mt-2 font-semibold">No messages yet</h3>
+              <p className="text-sm">Be the first to start the conversation!</p>
+            </div>
           </div>
       )}
        <div ref={messagesEndRef} />
@@ -161,7 +165,11 @@ export function ChatLayout({ conversations, currentUser, defaultConversationId }
               );
             })}
              {conversations.length === 0 && (
-                <div className="p-8 text-center text-muted-foreground">No conversations yet.</div>
+                <div className="p-8 text-center text-muted-foreground">
+                    <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                    <h3 className="mt-2 font-semibold">No Conversations</h3>
+                    <p className="text-sm">Contact a seller or another user to start a chat.</p>
+                </div>
              )}
           </div>
         </div>
@@ -201,7 +209,11 @@ export function ChatLayout({ conversations, currentUser, defaultConversationId }
           </>
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">
-            <p>Select a conversation to start chatting</p>
+            <div className="text-center">
+              <MessageCircle className="mx-auto h-16 w-16 text-muted-foreground/30"/>
+              <h3 className="mt-4 text-lg font-semibold">Select a conversation</h3>
+              <p className="mt-1 text-sm">Choose a conversation from the list to start chatting.</p>
+            </div>
           </div>
         )}
       </div>

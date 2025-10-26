@@ -5,11 +5,29 @@ import { SellItemForm } from "@/components/connect-hub/marketplace/sell-item-for
 import { Button } from "@/components/ui/button";
 import { useFirestore, useUser } from "@/firebase/index";
 import { Product } from "@/lib/data";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, ShoppingBag } from "lucide-react";
 import React, { useMemo } from 'react';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { SearchBar } from "@/components/connect-hub/shared/search-bar";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function MarketplaceSkeleton() {
+    return (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex flex-col space-y-3">
+              <Skeleton className="h-48 w-full rounded-lg" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+    );
+}
+
 
 export default function MarketplacePage() {
   const db = useFirestore();
@@ -51,17 +69,7 @@ export default function MarketplacePage() {
       <SellItemForm isOpen={isFormOpen} onOpenChange={setIsFormOpen} />
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex flex-col space-y-3">
-              <div className="h-48 w-full rounded-lg bg-muted animate-pulse" />
-              <div className="space-y-2">
-                <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-                <div className="h-4 w-1/2 rounded bg-muted animate-pulse" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <MarketplaceSkeleton />
       ) : (
         <>
           {marketplaceItems && marketplaceItems.length > 0 ? (
@@ -72,7 +80,13 @@ export default function MarketplacePage() {
             </div>
           ) : (
             <div className="text-center py-20">
-              <p className="text-muted-foreground">{searchTerm ? "No items match your search." : "No items for sale yet. Be the first!"}</p>
+              <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground/50" />
+              <h3 className="mt-4 text-lg font-semibold">
+                {searchTerm ? "No Items Match Your Search" : "The Marketplace is Empty"}
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {searchTerm ? "Try a different search term or check back later." : "Why not be the first to sell something?"}
+              </p>
             </div>
           )}
         </>

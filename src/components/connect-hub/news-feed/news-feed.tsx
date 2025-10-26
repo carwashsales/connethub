@@ -10,6 +10,7 @@ import { collection, doc, orderBy, query } from 'firebase/firestore';
 import type { Post, UserProfile as User } from '@/lib/types';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Newspaper } from 'lucide-react';
 
 function PostSkeleton() {
   return (
@@ -68,7 +69,9 @@ export function NewsFeed() {
         )}
          {!loadingPosts && posts?.length === 0 && (
             <div className="text-center py-20">
-              <p className="text-muted-foreground">The news feed is quiet... Be the first to post something!</p>
+              <Newspaper className="mx-auto h-16 w-16 text-muted-foreground/50" />
+              <h3 className="mt-4 text-lg font-semibold">The News Feed is Quiet</h3>
+              <p className="mt-2 text-sm text-muted-foreground">There are no posts yet. Why not be the first to share something?</p>
             </div>
           )}
       </div>
