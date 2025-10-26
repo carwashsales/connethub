@@ -84,32 +84,29 @@ export function SidebarNav({ user }: { user: UserProfile | null }) {
             </div>
           ) : authUser && user ? (
              <>
+                <div className="flex items-center justify-between">
+                    <SidebarMenuItem className="flex-1">
+                        <SidebarMenuButton asChild isActive={pathname.startsWith('/profile')} tooltip="Profile">
+                            <Link href="/profile" className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={user.avatar?.url} alt={user.name} data-ai-hint={user.avatar?.hint} />
+                                    <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip="Settings">
+                        <Link href="/settings">
+                            <Settings />
+                        </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </div>
               <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={pathname.startsWith('/profile')} tooltip="Profile">
-                      <Link href="/profile" className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.avatar?.url} alt={user.name} data-ai-hint={user.avatar?.hint} />
-                              <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col">
-                              <span className="font-semibold">{user.name}</span>
-                              <span className="text-xs text-muted-foreground">View Profile</span>
-                          </div>
-                      </Link>
-                  </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/settings'} tooltip="Settings">
-                  <Link href="/settings">
-                    <Settings />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} tooltip="Log Out">
+                <SidebarMenuButton onClick={handleLogout} tooltip={`Log Out ${user.name}`}>
                     <LogOut />
-                    <span>Log Out</span>
+                    <span>Log Out {user.name}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
              </>
