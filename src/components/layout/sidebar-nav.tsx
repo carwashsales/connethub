@@ -21,6 +21,7 @@ import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
 import { useMemo } from 'react';
+import { Skeleton } from '../ui/skeleton';
 
 const navItems = [
   { href: '/', label: 'News Feed', icon: Home },
@@ -31,7 +32,7 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { user: authUser, loading } = useUser();
+  const { user: authUser, loading: authLoading } = useUser();
   const db = useFirestore();
   const auth = useAuth();
   const router = useRouter();
@@ -41,7 +42,9 @@ export function SidebarNav() {
     return doc(db, 'users', authUser.uid);
   }, [db, authUser]);
 
-  const { data: currentUser } = useDoc<UserProfile>(currentUserDocRef);
+  const { data: currentUser, loading: userLoading } = useDoc<UserProfile>(currentUserDocRef);
+  
+  const loading = authLoading || userLoading;
 
   const handleLogout = async () => {
     if (auth) {
@@ -87,10 +90,10 @@ export function SidebarNav() {
         <SidebarMenu>
           {loading ? (
             <div className="flex items-center gap-3 p-2">
-              <Avatar className="h-8 w-8 bg-muted animate-pulse" />
+              <Skeleton className="h-8 w-8 rounded-full" />
               <div className='flex flex-col gap-1'>
-                 <div className="h-4 w-20 bg-muted animate-pulse rounded" />
-                 <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+                 <Skeleton className="h-4 w-20 rounded" />
+                 <Skeleton className="h-3 w-16 rounded" />
               </div>
             </div>
           ) : authUser && currentUser ? (
