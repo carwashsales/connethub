@@ -71,6 +71,48 @@
         }
       },
       "required": ["name", "description", "price", "sellerId", "image", "createdAt"]
+    },
+    "LostAndFoundItem": {
+      "title": "Lost and Found Item",
+      "description": "An item that has been reported as lost or found.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["lost", "found"]
+        },
+        "location": {
+          "type": "string"
+        },
+        "contact": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "hint": {
+              "type": "string"
+            }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "description", "type", "location", "contact", "userId", "image", "createdAt"]
     }
   },
   "auth": {
@@ -88,6 +130,12 @@
         "$ref": "#/entities/Product"
       },
       "description": "Contains all the items listed for sale in the marketplace."
+    },
+    "/lostAndFoundItems/{itemId}": {
+        "schema": {
+            "$ref": "#/entities/LostAndFoundItem"
+        },
+        "description": "Contains all the lost and found items."
     }
   }
 }

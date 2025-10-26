@@ -1,14 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LostFoundItem } from "@/lib/data";
+import { LostFoundItem } from "@/lib/types";
 import { MapPin, Calendar, Phone } from "lucide-react";
 import Image from "next/image";
+import { formatDistanceToNow } from 'date-fns';
 
 type ItemCardProps = {
   item: LostFoundItem;
 };
 
 export function ItemCard({ item }: ItemCardProps) {
+  const date = item.createdAt?.toDate ? formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true }) : 'Just now';
+
   return (
     <Card className="overflow-hidden shadow-sm transition-shadow hover:shadow-md">
       <div className="flex flex-col sm:flex-row">
@@ -39,7 +42,7 @@ export function ItemCard({ item }: ItemCardProps) {
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-accent" />
-                <span>{item.date}</span>
+                <span>{date}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-accent" />

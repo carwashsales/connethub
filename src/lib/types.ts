@@ -40,9 +40,10 @@ export type LostFoundItem = {
   name: string;
   description: string;
   location: string;
-  date: string;
   contact: string;
+  userId: string;
   image: { url: string; hint: string };
+  createdAt: any;
 };
 
 export type Conversation = {

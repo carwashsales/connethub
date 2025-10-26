@@ -59,10 +59,10 @@ export const posts: Post[] = [
 
 
 export const lostFoundItems: LostFoundItem[] = [
-  { id: 'lf-1', type: 'lost', name: 'Set of keys', description: 'A set of three keys on a green carabiner. Lost somewhere near the central park.', location: 'Central Park', date: '2024-07-20', contact: 'Contact John D.', image: { url: findImage('lost-item-1')?.imageUrl!, hint: findImage('lost-item-1')?.imageHint! } },
-  { id: 'lf-2', type: 'found', name: 'Black Wallet', description: 'A black leather wallet with various cards. Found on the bench near the bus stop on Main St.', location: 'Main St. Bus Stop', date: '2024-07-19', contact: 'Contact Admin', image: { url: findImage('found-item-1')?.imageUrl!, hint: findImage('found-item-1')?.imageHint! } },
-  { id: 'lf-3', type: 'lost', name: 'Golden Retriever Puppy', description: 'His name is "Buddy". He is very friendly and was last seen in the Oakwood neighborhood.', location: 'Oakwood', date: '2024-07-21', contact: 'Contact Sarah M.', image: { url: findImage('lost-item-2')?.imageUrl!, hint: findImage('lost-item-2')?.imageHint! } },
-  { id: 'lf-4', type: 'found', name: 'Silver Necklace', description: 'Found a silver necklace with a heart pendant at the library.', location: 'Public Library', date: '2024-07-21', contact: 'Contact Emily W.', image: { url: findImage('found-item-2')?.imageUrl!, hint: findImage('found-item-2')?.imageHint! } },
+  { id: 'lf-1', type: 'lost', name: 'Set of keys', description: 'A set of three keys on a green carabiner. Lost somewhere near the central park.', location: 'Central Park', createdAt: '2024-07-20', contact: 'Contact John D.', userId: 'user-2', image: { url: findImage('lost-item-1')?.imageUrl!, hint: findImage('lost-item-1')?.imageHint! } },
+  { id: 'lf-2', type: 'found', name: 'Black Wallet', description: 'A black leather wallet with various cards. Found on the bench near the bus stop on Main St.', location: 'Main St. Bus Stop', createdAt: '2024-07-19', contact: 'Contact Admin', userId: 'admin', image: { url: findImage('found-item-1')?.imageUrl!, hint: findImage('found-item-1')?.imageHint! } },
+  { id: 'lf-3', type: 'lost', name: 'Golden Retriever Puppy', description: 'His name is "Buddy". He is very friendly and was last seen in the Oakwood neighborhood.', location: 'Oakwood', createdAt: '2024-07-21', contact: 'Contact Sarah M.', userId: 'user-1', image: { url: findImage('lost-item-2')?.imageUrl!, hint: findImage('lost-item-2')?.imageHint! } },
+  { id: 'lf-4', type: 'found', name: 'Silver Necklace', description: 'Found a silver necklace with a heart pendant at the library.', location: 'Public Library', createdAt: '2024-07-21', contact: 'Contact Emily W.', userId: 'user-3', image: { url: findImage('found-item-2')?.imageUrl!, hint: findImage('found-item-2')?.imageHint! } },
 ];
 
 export const conversations: Conversation[] = [
