@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth, useFirestore } from '@/firebase/index';
-import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithPopup, type User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
@@ -23,12 +23,12 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const createUserProfile = async (user: any) => {
+  const createUserProfile = async (user: User, displayName?: string | null) => {
     if (!db) return;
     const userRef = doc(db, 'users', user.uid);
     const newUser = {
       uid: user.uid,
-      name: user.displayName || name,
+      name: displayName || user.displayName || 'New User',
       email: user.email,
       avatar: {
         url: user.photoURL || `https://picsum.photos/seed/${user.uid}/400/400`,
@@ -45,7 +45,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await createUserProfile(userCredential.user);
+      await createUserProfile(userCredential.user, name);
       toast({ title: 'Success', description: 'Account created successfully!' });
       router.push('/');
     } catch (error: any) {

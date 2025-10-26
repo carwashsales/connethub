@@ -16,10 +16,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { AdBanner } from '../connect-hub/shared/ad-banner';
-import { useAuth, useUser } from '@/firebase/index';
+import { useAuth, useUser, useFirestore } from '@/firebase/index';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase/provider';
 import { useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
 
@@ -44,7 +43,7 @@ export function SidebarNav() {
 
   const { data: currentUser, loading: userLoading } = useDoc<UserProfile>(currentUserDocRef);
   
-  const loading = authLoading || userLoading;
+  const loading = authLoading || (authUser && userLoading);
 
   const handleLogout = async () => {
     if (auth) {
