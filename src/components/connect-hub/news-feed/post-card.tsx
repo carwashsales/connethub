@@ -90,9 +90,13 @@ function EditPostDialog({ post, isOpen, onOpenChange }: { post: Post; isOpen: bo
 export function PostCard({ post }: PostCardProps) {
   const db = useFirestore();
   const { user: authUser } = useUser();
-  const { data: author } = useDoc<User>(
-    db && post.authorId ? doc(db, 'users', post.authorId) : null
-  );
+  
+  const authorDocRef = useMemo(() => {
+    if (!db || !post.authorId) return null;
+    return doc(db, 'users', post.authorId);
+  }, [db, post.authorId]);
+
+  const { data: author } = useDoc<User>(authorDocRef);
 
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);

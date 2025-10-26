@@ -13,9 +13,12 @@ import { SearchBar } from "@/components/connect-hub/shared/search-bar";
 
 export default function MarketplacePage() {
   const db = useFirestore();
-  const { data: allMarketplaceItems, loading } = useCollection<Product>(
-    db ? query(collection(db, "products"), orderBy("createdAt", "desc")) : null
-  );
+  const productsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, "products"), orderBy("createdAt", "desc"));
+  }, [db]);
+
+  const { data: allMarketplaceItems, loading } = useCollection<Product>(productsQuery);
   const { user } = useUser();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");

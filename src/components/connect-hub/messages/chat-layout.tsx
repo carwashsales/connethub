@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,12 @@ function ChatMessages({ conversation, currentUser }: { conversation: Conversatio
   const db = useFirestore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const { data: messages, loading } = useCollection<Message>(
-    db ? query(collection(db, 'conversations', conversation.id, 'messages'), orderBy('createdAt', 'asc')) : null
-  );
+  const messagesQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'conversations', conversation.id, 'messages'), orderBy('createdAt', 'asc'));
+  }, [db, conversation.id]);
+
+  const { data: messages, loading } = useCollection<Message>(messagesQuery);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -85,6 +88,8 @@ export function ChatLayout({ conversations, currentUser, defaultConversationId }
       if (convo) {
         setSelectedConversation(convo);
       }
+    } else if (conversations.length > 0) {
+      setSelectedConversation(null);
     }
   }, [defaultConversationId, conversations]);
 

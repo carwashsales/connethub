@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 
@@ -57,9 +57,12 @@ export default function ProfilePage() {
         }
     }, [searchParams, authUser]);
 
-    const { data: user, loading: userLoading } = useDoc<UserProfile>(
-        db && targetUserId ? doc(db, 'users', targetUserId) : null
-    );
+    const userDocRef = useMemo(() => {
+        if (!db || !targetUserId) return null;
+        return doc(db, 'users', targetUserId);
+    }, [db, targetUserId]);
+
+    const { data: user, loading: userLoading } = useDoc<UserProfile>(userDocRef);
     
     const coverImage = PlaceHolderImages.find(img => img.id === 'profile-cover');
 

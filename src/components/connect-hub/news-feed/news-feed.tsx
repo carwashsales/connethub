@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CreatePost } from "@/components/connect-hub/news-feed/create-post";
 import { PostCard } from "@/components/connect-hub/news-feed/post-card";
 import { AdBanner } from "@/components/connect-hub/shared/ad-banner";
@@ -38,13 +38,19 @@ export function NewsFeed() {
   const { user: authUser } = useUser();
   const db = useFirestore();
 
-  const { data: currentUser } = useDoc<User>(
-    db && authUser ? doc(db, 'users', authUser.uid) : null
-  );
+  const currentUserDocRef = useMemo(() => {
+    if (!db || !authUser) return null;
+    return doc(db, 'users', authUser.uid);
+  }, [db, authUser]);
+  
+  const { data: currentUser } = useDoc<User>(currentUserDocRef);
 
-  const { data: posts, loading: loadingPosts } = useCollection<Post>(
-    db ? query(collection(db, "posts"), orderBy("createdAt", "desc")) : null
-  );
+  const postsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, "posts"), orderBy("createdAt", "desc"));
+  }, [db]);
+
+  const { data: posts, loading: loadingPosts } = useCollection<Post>(postsQuery);
 
   return (
     <div className="space-y-8">

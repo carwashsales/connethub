@@ -47,13 +47,18 @@ export default function MessagesPage() {
   const searchParams = useSearchParams();
   const conversationIdFromUrl = searchParams.get('conversationId');
 
-  const { data: users, loading: usersLoading } = useCollection<UserProfile>(
-    db ? collection(db, 'users') : null
-  );
+  const usersQuery = useMemo(() => {
+    if (!db) return null;
+    return collection(db, 'users');
+  }, [db]);
 
-  const { data: conversationsData, loading: convosLoading } = useCollection<ConversationType>(
-    db && authUser ? query(collection(db, 'conversations'), where('participantIds', 'array-contains', authUser.uid), orderBy('lastMessageAt', 'desc')) : null
-  );
+  const conversationsQuery = useMemo(() => {
+    if (!db || !authUser) return null;
+    return query(collection(db, 'conversations'), where('participantIds', 'array-contains', authUser.uid), orderBy('lastMessageAt', 'desc'));
+  }, [db, authUser]);
+
+  const { data: users, loading: usersLoading } = useCollection<UserProfile>(usersQuery);
+  const { data: conversationsData, loading: convosLoading } = useCollection<ConversationType>(conversationsQuery);
 
   const conversations = useMemo(() => {
     if (!conversationsData || !users) return [];

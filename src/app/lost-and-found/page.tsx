@@ -61,13 +61,19 @@ export default function LostAndFoundPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: lostItems, loading: loadingLost } = useCollection<LostFoundItem>(
-    db ? query(collection(db, "lostAndFoundItems"), where("type", "==", "lost"), orderBy("createdAt", "desc")) : null
-  );
-  
-  const { data: foundItems, loading: loadingFound } = useCollection<LostFoundItem>(
-    db ? query(collection(db, "lostAndFoundItems"), where("type", "==", "found"), orderBy("createdAt", "desc")) : null
-  );
+  const lostItemsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, "lostAndFoundItems"), where("type", "==", "lost"), orderBy("createdAt", "desc"));
+  }, [db]);
+
+  const foundItemsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, "lostAndFoundItems"), where("type", "==", "found"), orderBy("createdAt", "desc"));
+  }, [db]);
+
+  const { data: lostItems, loading: loadingLost } = useCollection<LostFoundItem>(lostItemsQuery);
+  const { data: foundItems, loading: loadingFound } = useCollection<LostFoundItem>(foundItemsQuery);
+
 
   return (
     <div className="container mx-auto py-8 px-4">

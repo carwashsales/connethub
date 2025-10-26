@@ -13,13 +13,14 @@ import { Separator } from '@/components/ui/separator';
 import { Home, Store, Search, MessageSquare, UserCircle2, Settings, LogIn, LogOut, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { User, users } from '@/lib/data';
+import type { UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { AdBanner } from '../connect-hub/shared/ad-banner';
 import { useAuth, useUser } from '@/firebase/index';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
+import { useMemo } from 'react';
 
 const navItems = [
   { href: '/', label: 'News Feed', icon: Home },
@@ -35,9 +36,12 @@ export function SidebarNav() {
   const auth = useAuth();
   const router = useRouter();
 
-  const { data: currentUser } = useDoc<User>(
-    db && authUser ? doc(db, 'users', authUser.uid) : null
-  );
+  const currentUserDocRef = useMemo(() => {
+    if (!db || !authUser) return null;
+    return doc(db, 'users', authUser.uid);
+  }, [db, authUser]);
+
+  const { data: currentUser } = useDoc<UserProfile>(currentUserDocRef);
 
   const handleLogout = async () => {
     if (auth) {

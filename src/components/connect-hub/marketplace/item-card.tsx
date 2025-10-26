@@ -49,9 +49,12 @@ export function ItemCard({ item }: ItemCardProps) {
 
   const isSeller = useMemo(() => authUser && authUser.uid === item.sellerId, [authUser, item.sellerId]);
   
-  const { data: seller } = useDoc<UserProfile>(
-    db && item.sellerId ? doc(db, 'users', item.sellerId) : null
-  );
+  const sellerDocRef = useMemo(() => {
+    if (!db || !item.sellerId) return null;
+    return doc(db, 'users', item.sellerId);
+  }, [db, item.sellerId]);
+
+  const { data: seller } = useDoc<UserProfile>(sellerDocRef);
 
   const handleContactSeller = async () => {
     if (!db || !authUser || !seller || authUser.uid === seller.uid) return;
