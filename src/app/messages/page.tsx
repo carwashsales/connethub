@@ -11,6 +11,7 @@ import { User as UserIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSearchParams } from "next/navigation";
 
 function ChatSkeleton() {
   return (
@@ -43,6 +44,8 @@ function ChatSkeleton() {
 export default function MessagesPage() {
   const { user: authUser, loading: authLoading } = useUser();
   const db = useFirestore();
+  const searchParams = useSearchParams();
+  const conversationIdFromUrl = searchParams.get('conversationId');
 
   const { data: users, loading: usersLoading } = useCollection<UserProfile>(
     db ? collection(db, 'users') : null
@@ -92,6 +95,7 @@ export default function MessagesPage() {
         <ChatLayout 
             conversations={conversations} 
             currentUser={users?.find(u => u.uid === authUser.uid)!}
+            defaultConversationId={conversationIdFromUrl}
         />
     </div>
   );

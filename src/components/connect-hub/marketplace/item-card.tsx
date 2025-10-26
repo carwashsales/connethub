@@ -4,13 +4,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useUser } from "@/firebase/index";
-import { doc } from "firebase/firestore";
+import { doc, getDocs, query, collection, where, addDoc, serverTimestamp } from "firebase/firestore";
 import type { Product } from "@/lib/data";
 import Image from "next/image";
 import { MessageSquare } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import type { UserProfile } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 
 type ItemCardProps = {
@@ -20,13 +21,50 @@ type ItemCardProps = {
 export function ItemCard({ item }: ItemCardProps) {
   const  db  = useFirestore();
   const { user: authUser } = useUser();
+  const router = useRouter();
   
   const { data: seller } = useDoc<UserProfile>(
     db && item.sellerId ? doc(db, 'users', item.sellerId) : null
   );
 
+  const handleContactSeller = async () => {
+    if (!db || !authUser || !seller || authUser.uid === seller.uid) return;
+
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(conversationsRef, 
+      where('participantIds', 'array-contains', authUser.uid)
+    );
+
+    const querySnapshot = await getDocs(q);
+    let existingConversation = null;
+
+    querySnapshot.forEach(doc => {
+      const conversation = doc.data();
+      if (conversation.participantIds.includes(seller.uid)) {
+        existingConversation = { id: doc.id, ...conversation };
+      }
+    });
+
+    if (existingConversation) {
+      router.push(`/messages?conversationId=${existingConversation.id}`);
+    } else {
+      const newConversation = await addDoc(conversationsRef, {
+        participantIds: [authUser.uid, seller.uid],
+        lastMessageAt: serverTimestamp(),
+        lastMessageText: ''
+      });
+      router.push(`/messages?conversationId=${newConversation.id}`);
+    }
+  };
+
   const contactButton = (
-    <Button size="sm" variant="ghost" className="text-primary hover:bg-primary/10" disabled={!authUser || authUser.isAnonymous || authUser.uid === item.sellerId}>
+    <Button 
+      size="sm" 
+      variant="ghost" 
+      className="text-primary hover:bg-primary/10" 
+      disabled={!authUser || authUser.uid === item.sellerId}
+      onClick={handleContactSeller}
+      >
       <MessageSquare className="mr-2 h-4 w-4" />
       Contact
     </Button>
@@ -64,7 +102,7 @@ export function ItemCard({ item }: ItemCardProps) {
         </div>
         
         <TooltipProvider>
-            {(!authUser || authUser.isAnonymous) ? (
+            {(!authUser) ? (
             <Tooltip>
                 <TooltipTrigger asChild>
                 <span tabIndex={0}>{contactButton}</span>

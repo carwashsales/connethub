@@ -16,6 +16,7 @@ import { formatDistanceToNow } from 'date-fns';
 type ChatLayoutProps = {
   conversations: Conversation[];
   currentUser: UserProfile;
+  defaultConversationId?: string | null;
 };
 
 function ChatMessages({ conversation, currentUser }: { conversation: Conversation, currentUser: UserProfile }) {
@@ -38,39 +39,54 @@ function ChatMessages({ conversation, currentUser }: { conversation: Conversatio
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-4">
-      {messages?.map((msg) => {
-        const sender = msg.senderId === currentUser.uid ? currentUser : otherParticipant;
-        const timestamp = msg.createdAt?.toDate ? formatDistanceToNow(msg.createdAt.toDate(), { addSuffix: true }) : 'just now';
+      {messages && messages.length > 0 ? (
+        messages.map((msg) => {
+          const sender = msg.senderId === currentUser.uid ? currentUser : otherParticipant;
+          const timestamp = msg.createdAt?.toDate ? formatDistanceToNow(msg.createdAt.toDate(), { addSuffix: true }) : 'just now';
 
-        return (
-          <div key={msg.id} className={cn("flex gap-3", msg.senderId === currentUser.uid ? "justify-end" : "justify-start")}>
-            {msg.senderId !== currentUser.uid && sender && (
-               <Avatar className="h-8 w-8">
-                 <AvatarImage src={sender.avatar.url} alt={sender.name} data-ai-hint={sender.avatar.hint} />
-                 <AvatarFallback>{sender.name.charAt(0)}</AvatarFallback>
-               </Avatar>
-            )}
-            <div className={cn(
-              "max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-4 py-2",
-              msg.senderId === currentUser.uid
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary"
-            )}>
-              <p className="text-sm">{msg.text}</p>
-              <p className="text-xs opacity-70 mt-1 text-right">{timestamp}</p>
+          return (
+            <div key={msg.id} className={cn("flex gap-3", msg.senderId === currentUser.uid ? "justify-end" : "justify-start")}>
+              {msg.senderId !== currentUser.uid && sender && (
+                 <Avatar className="h-8 w-8">
+                   <AvatarImage src={sender.avatar.url} alt={sender.name} data-ai-hint={sender.avatar.hint} />
+                   <AvatarFallback>{sender.name.charAt(0)}</AvatarFallback>
+                 </Avatar>
+              )}
+              <div className={cn(
+                "max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-4 py-2",
+                msg.senderId === currentUser.uid
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary"
+              )}>
+                <p className="text-sm">{msg.text}</p>
+                <p className="text-xs opacity-70 mt-1 text-right">{timestamp}</p>
+              </div>
             </div>
+          )
+        })
+      ) : (
+         <div className="flex h-full items-center justify-center text-muted-foreground">
+            <p>No messages yet. Start the conversation!</p>
           </div>
-        )
-      })}
+      )}
        <div ref={messagesEndRef} />
     </div>
   )
 }
 
-export function ChatLayout({ conversations, currentUser }: ChatLayoutProps) {
+export function ChatLayout({ conversations, currentUser, defaultConversationId }: ChatLayoutProps) {
   const db = useFirestore();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState("");
+
+  useEffect(() => {
+    if (defaultConversationId) {
+      const convo = conversations.find(c => c.id === defaultConversationId);
+      if (convo) {
+        setSelectedConversation(convo);
+      }
+    }
+  }, [defaultConversationId, conversations]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
