@@ -10,6 +10,7 @@ import { useDoc } from "@/firebase/firestore/use-doc";
 import { doc } from 'firebase/firestore';
 import { useFirestore } from "@/firebase/index";
 import { formatDistanceToNow } from 'date-fns';
+import Link from "next/link";
 
 
 type PostCardProps = {
@@ -29,17 +30,25 @@ export function PostCard({ post }: PostCardProps) {
     <Card className="shadow-sm overflow-hidden">
       <CardHeader className="p-4 flex flex-row items-center gap-3">
         {author ? (
+          <Link href={`/profile?userId=${author.uid}`} className="flex items-center gap-3 group">
             <Avatar>
                 <AvatarImage src={author.avatar.url} alt={author.name} data-ai-hint={author.avatar.hint} />
                 <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
             </Avatar>
+            <div className="flex-1">
+              <p className="font-semibold group-hover:underline">{author?.name || 'Loading...'}</p>
+              <p className="text-xs text-muted-foreground">{date}</p>
+            </div>
+          </Link>
         ): (
-          <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+            <div className="flex-1">
+              <div className="h-4 w-24 bg-muted animate-pulse rounded-md" />
+              <div className="h-3 w-16 bg-muted animate-pulse rounded-md mt-1" />
+            </div>
+          </div>
         )}
-        <div className="flex-1">
-          <p className="font-semibold">{author?.name || 'Loading...'}</p>
-          <p className="text-xs text-muted-foreground">{date}</p>
-        </div>
       </CardHeader>
       <CardContent className="px-4 pb-2">
         <p className="text-sm whitespace-pre-wrap">{post.content}</p>

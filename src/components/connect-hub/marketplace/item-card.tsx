@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { useDoc } from "@/firebase/firestore/use-doc";
 import type { UserProfile } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 
 type ItemCardProps = {
@@ -62,7 +63,7 @@ export function ItemCard({ item }: ItemCardProps) {
       size="sm" 
       variant="ghost" 
       className="text-primary hover:bg-primary/10" 
-      disabled={!authUser || authUser.uid === item.sellerId}
+      disabled={!authUser || !seller || (authUser && authUser.uid === item.sellerId)}
       onClick={handleContactSeller}
       >
       <MessageSquare className="mr-2 h-4 w-4" />
@@ -90,14 +91,19 @@ export function ItemCard({ item }: ItemCardProps) {
       </CardContent>
       <CardFooter className="flex justify-between items-center p-4 bg-secondary/30">
         <div className="flex items-center gap-2">
-            {seller && (
-                <>
-                <Avatar className="h-8 w-8">
-                    <AvatarImage src={seller.avatar.url} alt={seller.name} data-ai-hint={seller.avatar.hint} />
-                    <AvatarFallback>{seller.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium">{seller.name}</span>
-                </>
+            {seller ? (
+                <Link href={`/profile?userId=${seller.uid}`} className="flex items-center gap-2 group">
+                  <Avatar className="h-8 w-8">
+                      <AvatarImage src={seller.avatar.url} alt={seller.name} data-ai-hint={seller.avatar.hint} />
+                      <AvatarFallback>{seller.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium group-hover:underline">{seller.name}</span>
+                </Link>
+            ) : (
+                 <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                    <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+                 </div>
             )}
         </div>
         

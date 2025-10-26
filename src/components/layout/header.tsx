@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Home, Store, Search, MessageSquare, UserCircle2 } from 'lucide-react';
 import React from 'react';
 
@@ -9,12 +9,20 @@ const routeTitles: { [key: string]: { title: string; icon: React.ElementType } }
   '/marketplace': { title: 'Marketplace', icon: Store },
   '/lost-and-found': { title: 'Lost & Found', icon: Search },
   '/messages': { title: 'Messages', icon: MessageSquare },
-  '/profile': { title: 'My Profile', icon: UserCircle2 },
+  '/profile': { title: 'Profile', icon: UserCircle2 },
 };
 
 export function Header({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname();
-  const { title, icon: Icon } = routeTitles[pathname] || { title: 'Connect Hub', icon: Home };
+  const searchParams = useSearchParams();
+  
+  let pageInfo = routeTitles[pathname] || { title: 'Connect Hub', icon: Home };
+
+  if (pathname === '/profile' && searchParams.has('userId')) {
+    pageInfo = { title: 'User Profile', icon: UserCircle2 };
+  }
+
+  const { title, icon: Icon } = pageInfo;
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
