@@ -40,8 +40,10 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange, itemToEdit }: Post
   useEffect(() => {
     if (itemToEdit) {
       setItemType(itemToEdit.type);
+    } else {
+      setItemType('lost');
     }
-  }, [itemToEdit]);
+  }, [itemToEdit, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +99,6 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange, itemToEdit }: Post
       }
       
       formRef.current?.reset();
-      setItemType('lost');
       onOpenChange(false);
 
     } catch (error) {
