@@ -1,5 +1,5 @@
 
-import { SidebarProvider, Sidebar } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "./sidebar-nav";
 import { Header } from "./header";
 import type { UserProfile } from "@/lib/types";
