@@ -6,28 +6,43 @@ import { Button } from "@/components/ui/button";
 import { useFirestore, useUser } from "@/firebase/index";
 import { Product } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
-import React from 'react';
+import React, { useMemo } from 'react';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useCollection } from "@/firebase/firestore/use-collection";
+import { SearchBar } from "@/components/connect-hub/shared/search-bar";
 
 export default function MarketplacePage() {
   const db = useFirestore();
-  const { data: marketplaceItems, loading } = useCollection<Product>(
+  const { data: allMarketplaceItems, loading } = useCollection<Product>(
     db ? query(collection(db, "products"), orderBy("createdAt", "desc")) : null
   );
   const { user } = useUser();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  const marketplaceItems = useMemo(() => {
+    if (!allMarketplaceItems) return [];
+    if (!searchTerm) return allMarketplaceItems;
+
+    return allMarketplaceItems.filter(item => 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [allMarketplaceItems, searchTerm]);
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold font-headline">For Sale</h1>
-        {user && !user.isAnonymous && (
-          <Button onClick={() => setIsFormOpen(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Sell Your Item
-          </Button>
-        )}
+        <div className="flex w-full sm:w-auto gap-2">
+            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search for items..." />
+            {user && !user.isAnonymous && (
+            <Button onClick={() => setIsFormOpen(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Sell
+            </Button>
+            )}
+        </div>
       </div>
 
       <SellItemForm isOpen={isFormOpen} onOpenChange={setIsFormOpen} />
@@ -54,7 +69,7 @@ export default function MarketplacePage() {
             </div>
           ) : (
             <div className="text-center py-20">
-              <p className="text-muted-foreground">No items for sale yet. Be the first to list something!</p>
+              <p className="text-muted-foreground">{searchTerm ? "No items match your search." : "No items for sale yet. Be the first!"}</p>
             </div>
           )}
         </>

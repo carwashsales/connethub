@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { ItemCard } from "@/components/connect-hub/lost-and-found/item-card";
-import { ItemSearch } from "@/components/connect-hub/lost-and-found/item-search";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle } from "lucide-react";
@@ -11,8 +10,21 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { LostFoundItem } from '@/lib/types';
 import { PostLostFoundItemForm } from '@/components/connect-hub/lost-and-found/post-lost-found-item-form';
+import { SearchBar } from '@/components/connect-hub/shared/search-bar';
 
-function ItemList({ items, loading }: { items: LostFoundItem[] | null, loading: boolean }) {
+function ItemList({ items, loading, searchTerm }: { items: LostFoundItem[] | null, loading: boolean, searchTerm: string }) {
+  const filteredItems = useMemo(() => {
+    if (!items) return [];
+    if (!searchTerm) return items;
+
+    return items.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [items, searchTerm]);
+
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -31,13 +43,13 @@ function ItemList({ items, loading }: { items: LostFoundItem[] | null, loading: 
     );
   }
 
-  if (!items || items.length === 0) {
-    return <p className="text-center text-muted-foreground py-10">No items reported yet.</p>;
+  if (!filteredItems || filteredItems.length === 0) {
+    return <p className="text-center text-muted-foreground py-10">{searchTerm ? "No items match your search." : "No items reported yet."}</p>;
   }
 
   return (
     <div className="space-y-4">
-      {items.map((item) => <ItemCard key={item.id} item={item} />)}
+      {filteredItems.map((item) => <ItemCard key={item.id} item={item} />)}
     </div>
   );
 }
@@ -46,7 +58,8 @@ function ItemList({ items, loading }: { items: LostFoundItem[] | null, loading: 
 export default function LostAndFoundPage() {
   const db = useFirestore();
   const { user } = useUser();
-  const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: lostItems, loading: loadingLost } = useCollection<LostFoundItem>(
     db ? query(collection(db, "lostAndFoundItems"), where("type", "==", "lost"), orderBy("createdAt", "desc")) : null
@@ -66,7 +79,7 @@ export default function LostAndFoundPage() {
             <TabsTrigger value="found">Found Items</TabsTrigger>
           </TabsList>
           <div className="flex w-full sm:w-auto gap-2">
-            <ItemSearch />
+            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Search lost & found..." />
             {user && !user.isAnonymous && (
               <Button onClick={() => setIsFormOpen(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
                 <PlusCircle className="mr-2 h-4 w-4" /> Post an Item
@@ -75,10 +88,10 @@ export default function LostAndFoundPage() {
           </div>
         </div>
         <TabsContent value="lost">
-          <ItemList items={lostItems} loading={loadingLost} />
+          <ItemList items={lostItems} loading={loadingLost} searchTerm={searchTerm} />
         </TabsContent>
         <TabsContent value="found">
-          <ItemList items={foundItems} loading={loadingFound} />
+          <ItemList items={foundItems} loading={loadingFound} searchTerm={searchTerm} />
         </TabsContent>
       </Tabs>
     </div>
