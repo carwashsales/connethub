@@ -1,4 +1,5 @@
 
+
 export type UserProfile = {
   id: string;
   uid: string;
@@ -31,6 +32,7 @@ export type Post = {
   image?: { url: string; hint: string };
   createdAt: any;
   likes: number;
+  likedBy: string[];
   comments: number;
 };
 

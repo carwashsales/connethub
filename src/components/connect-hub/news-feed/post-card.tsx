@@ -7,8 +7,8 @@ import { Post, UserProfile as User } from "@/lib/types";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 import Image from "next/image";
 import { useDoc } from "@/firebase/firestore/use-doc";
-import { doc } from 'firebase/firestore';
-import { useFirestore } from "@/firebase/index";
+import { doc, updateDoc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
+import { useFirestore, useUser } from "@/firebase/index";
 import { formatDistanceToNow } from 'date-fns';
 import Link from "next/link";
 
@@ -19,11 +19,33 @@ type PostCardProps = {
 
 export function PostCard({ post }: PostCardProps) {
   const db = useFirestore();
+  const { user: authUser } = useUser();
   const { data: author } = useDoc<User>(
     db && post.authorId ? doc(db, 'users', post.authorId) : null
   );
 
   const date = post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now';
+
+  const hasLiked = authUser && post.likedBy?.includes(authUser.uid);
+
+  const handleLike = async () => {
+    if (!db || !authUser) return;
+    const postRef = doc(db, 'posts', post.id);
+
+    if (hasLiked) {
+      // Unlike
+      await updateDoc(postRef, {
+        likedBy: arrayRemove(authUser.uid),
+        likes: increment(-1)
+      });
+    } else {
+      // Like
+      await updateDoc(postRef, {
+        likedBy: arrayUnion(authUser.uid),
+        likes: increment(1)
+      });
+    }
+  };
 
 
   return (
@@ -66,8 +88,8 @@ export function PostCard({ post }: PostCardProps) {
       )}
       <CardFooter className="p-2 flex justify-between items-center bg-secondary/20">
         <div className="flex gap-1">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
-                <Heart className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={handleLike} disabled={!authUser} className="flex items-center gap-2 text-muted-foreground hover:text-primary">
+                <Heart className={`h-4 w-4 ${hasLiked ? 'fill-red-500 text-red-500' : ''}`} />
                 <span>{post.likes}</span>
             </Button>
             <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
