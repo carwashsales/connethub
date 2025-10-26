@@ -4,8 +4,10 @@ import React from 'react';
 import { CreatePost } from "@/components/connect-hub/news-feed/create-post";
 import { PostCard } from "@/components/connect-hub/news-feed/post-card";
 import { AdBanner } from "@/components/connect-hub/shared/ad-banner";
-import { users, type Post } from "@/lib/data";
-import { useUser } from '@/firebase/index';
+import { type Post, User } from "@/lib/data";
+import { useFirestore, useUser } from '@/firebase/index';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { doc } from 'firebase/firestore';
 
 type NewsFeedProps = {
     initialPosts: Post[];
@@ -13,9 +15,11 @@ type NewsFeedProps = {
 
 export function NewsFeed({ initialPosts }: NewsFeedProps) {
   const { user: authUser } = useUser();
+  const db = useFirestore();
+  const { data: currentUser } = useDoc<User>(
+    db && authUser ? doc(db, 'users', authUser.uid) : null
+  );
   const posts = initialPosts;
-
-  const currentUser = users.find(user => user.id === 'user-1');
 
   return (
     <div className="space-y-8">

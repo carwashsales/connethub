@@ -74,7 +74,7 @@ export function CreatePost({ user }: CreatePostProps) {
     }
   }, [state, toast, authUser, db]);
   
-  if (!authUser || authUser.isAnonymous) {
+  if (!authUser || authUser.isAnonymous || !user) {
     return null;
   }
 

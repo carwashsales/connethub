@@ -3,17 +3,33 @@ import './globals.css';
 import { AppLayout } from '@/components/layout/app-layout';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { useUser } from '@/firebase/index';
 
 export const metadata: Metadata = {
   title: 'Connect Hub',
   description: 'Your community connection platform',
 };
 
+function AuthDependentLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useUser();
+
+  // if (!loading && !user && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+  //   window.location.href = '/login';
+  //   return null;
+  // }
+
+  return <AppLayout>{children}</AppLayout>;
+}
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const path = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isAuthPage = path === '/login' || path === '/signup';
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -24,9 +40,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
+          {isAuthPage ? children : <AppLayout>{children}</AppLayout>}
           <Toaster />
         </FirebaseClientProvider>
       </body>

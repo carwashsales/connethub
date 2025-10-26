@@ -1,16 +1,24 @@
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Post, users } from "@/lib/data";
+import { Post, User } from "@/lib/data";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 import Image from "next/image";
+import { useDoc } from "@/firebase/firestore/use-doc";
+import { doc } from 'firebase/firestore';
+import { useFirestore } from "@/firebase/index";
 
 type PostCardProps = {
   post: Post;
 };
 
 export function PostCard({ post }: PostCardProps) {
-  const author = users.find(user => user.id === post.authorId);
+  const db = useFirestore();
+  const { data: author } = useDoc<User>(
+    db && post.authorId ? doc(db, 'users', post.authorId) : null
+  );
 
   return (
     <Card className="shadow-sm overflow-hidden">

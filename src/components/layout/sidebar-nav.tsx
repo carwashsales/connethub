@@ -10,12 +10,16 @@ import {
   SidebarGroup,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { Home, Store, Search, MessageSquare, UserCircle2, Settings } from 'lucide-react';
+import { Home, Store, Search, MessageSquare, UserCircle2, Settings, LogIn, LogOut, UserPlus } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { users } from '@/lib/data';
+import { usePathname, useRouter } from 'next/navigation';
+import { User, users } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { AdBanner } from '../connect-hub/shared/ad-banner';
+import { useAuth, useUser } from '@/firebase/index';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase/provider';
 
 const navItems = [
   { href: '/', label: 'News Feed', icon: Home },
@@ -26,7 +30,22 @@ const navItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const currentUser = users[0];
+  const { user: authUser, loading } = useUser();
+  const db = useFirestore();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const { data: currentUser } = useDoc<User>(
+    db && authUser ? doc(db, 'users', authUser.uid) : null
+  );
+
+  const handleLogout = async () => {
+    if (auth) {
+      await auth.signOut();
+      router.push('/login');
+    }
+  };
+
 
   return (
     <>
@@ -62,28 +81,66 @@ export function SidebarNav() {
       <SidebarFooter className='p-2'>
         <Separator className="my-2" />
         <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === '/profile'} tooltip="Profile">
-                    <Link href="/profile" className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={currentUser.avatar.url} alt={currentUser.name} data-ai-hint={currentUser.avatar.hint} />
-                            <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                            <span className="font-semibold">{currentUser.name}</span>
-                            <span className="text-xs text-muted-foreground">View Profile</span>
-                        </div>
-                    </Link>
+          {loading ? (
+            <div className="flex items-center gap-3 p-2">
+              <Avatar className="h-8 w-8 bg-muted animate-pulse" />
+              <div className='flex flex-col gap-1'>
+                 <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+                 <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          ) : authUser && currentUser ? (
+             <>
+              <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === '/profile'} tooltip="Profile">
+                      <Link href="/profile" className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                              <AvatarImage src={currentUser.avatar?.url} alt={currentUser.name} data-ai-hint={currentUser.avatar?.hint} />
+                              <AvatarFallback>{currentUser.name?.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                              <span className="font-semibold">{currentUser.name}</span>
+                              <span className="text-xs text-muted-foreground">View Profile</span>
+                          </div>
+                      </Link>
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout} tooltip="Log Out">
+                    <LogOut />
+                    <span>Log Out</span>
                 </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Settings">
-                <Link href="#">
-                  <Settings />
-                  <span>Settings</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+              </SidebarMenuItem>
+             </>
+          ) : (
+            <>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === '/login'} tooltip="Login">
+                  <Link href="/login">
+                    <LogIn />
+                    <span>Login</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === '/signup'} tooltip="Sign Up">
+                  <Link href="/signup">
+                    <UserPlus />
+                    <span>Sign Up</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          )}
+
+           <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Settings">
+              <Link href="#">
+                <Settings />
+                <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </>
