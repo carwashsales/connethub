@@ -89,7 +89,7 @@ export function SidebarNav({ user }: { user: UserProfile | null }) {
                         <Link href="/profile" className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={user.avatar?.url} alt={user.name} data-ai-hint={user.avatar?.hint} />
-                                <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                                <AvatarFallback>{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                             </Avatar>
                              <div className="flex flex-col items-start text-left">
                                 <span className="text-sm font-medium">{user.name}</span>
