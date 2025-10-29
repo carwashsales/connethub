@@ -147,7 +147,7 @@ export function PostCard({ post }: PostCardProps) {
           <Link href={`/profile?userId=${author.uid}`} className="flex items-center gap-3 group flex-1">
             <Avatar>
                 <AvatarImage src={author.avatar.url} alt={author.name} data-ai-hint={author.avatar.hint} />
-                <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{author.email?.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <p className="font-semibold group-hover:underline">{author?.name || 'Loading...'}</p>

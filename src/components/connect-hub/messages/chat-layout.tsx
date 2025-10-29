@@ -52,7 +52,7 @@ function ChatMessages({ conversation, currentUser }: { conversation: Conversatio
               {msg.senderId !== currentUser.uid && sender && (
                  <Avatar className="h-8 w-8">
                    <AvatarImage src={sender.avatar.url} alt={sender.name} data-ai-hint={sender.avatar.hint} />
-                   <AvatarFallback>{sender.name.charAt(0)}</AvatarFallback>
+                   <AvatarFallback>{sender.email?.charAt(0).toUpperCase()}</AvatarFallback>
                  </Avatar>
               )}
               <div className={cn(
@@ -154,7 +154,7 @@ export function ChatLayout({ conversations, currentUser, defaultConversationId }
                 >
                   <Avatar>
                     <AvatarImage src={otherUser.avatar.url} alt={otherUser.name} data-ai-hint={otherUser.avatar.hint}/>
-                    <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{otherUser.email?.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 overflow-hidden">
                     <p className="font-semibold truncate">{otherUser.name}</p>
@@ -186,7 +186,7 @@ export function ChatLayout({ conversations, currentUser, defaultConversationId }
                </Button>
               <Avatar>
                 <AvatarImage src={getOtherParticipant(selectedConversation)?.avatar.url} alt={getOtherParticipant(selectedConversation)?.name} data-ai-hint={getOtherParticipant(selectedConversation)?.avatar.hint}/>
-                <AvatarFallback>{getOtherParticipant(selectedConversation)?.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{getOtherParticipant(selectedConversation)?.email?.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <h2 className="text-lg font-semibold">{getOtherParticipant(selectedConversation)?.name}</h2>
             </div>

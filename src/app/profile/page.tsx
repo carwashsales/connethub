@@ -154,7 +154,7 @@ export default function ProfilePage() {
                         <div className="relative">
                             <Avatar className="h-32 w-32 border-4 border-background ring-2 ring-primary">
                                 <AvatarImage src={user.avatar.url} alt={user.name} data-ai-hint={user.avatar.hint} />
-                                <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
+                                <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
                         </div>
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFirestore, useUser } from "@/firebase/index";
 import { doc, getDocs, query, collection, where, addDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
-import type { Product } from "@/lib/data";
+import type { Product } from "@/lib/types";
 import Image from "next/image";
 import { MessageSquare, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -158,7 +158,7 @@ export function ItemCard({ item }: ItemCardProps) {
                 <Link href={`/profile?userId=${seller.uid}`} className="flex items-center gap-2 group">
                   <Avatar className="h-8 w-8">
                       <AvatarImage src={seller.avatar.url} alt={seller.name} data-ai-hint={seller.avatar.hint} />
-                      <AvatarFallback>{seller.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{seller.email?.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <span className="text-sm font-medium group-hover:underline">{seller.name}</span>
                 </Link>

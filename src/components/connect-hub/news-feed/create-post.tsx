@@ -102,7 +102,7 @@ export function CreatePost({ user }: CreatePostProps) {
           <div className="flex items-start gap-4">
             <Avatar>
               <AvatarImage src={user?.avatar?.url} alt={user?.name} data-ai-hint={user?.avatar?.hint} />
-              <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+              <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="w-full">
               <Textarea
