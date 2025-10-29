@@ -1,12 +1,13 @@
 'use client';
 
 import { useFirestore, useUser } from '@/firebase/index';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from './app-layout';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
+import LoginPage from '@/app/login/page';
 
 function FullPageLoader() {
     return (
@@ -32,11 +33,9 @@ function FullPageLoader() {
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user: authUser, loading: authLoading } = useUser();
-  const router = useRouter();
-  const pathname = usePathname();
   const db = useFirestore();
-
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
   const userDocRef = useMemo(() => {
     if (!db || !authUser) return null;
@@ -46,32 +45,16 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (authLoading) {
-      return; 
-    }
+    setMounted(true);
+  }, []);
 
-    if (authUser && isAuthPage) {
-      router.replace('/');
-    }
-    
-    if (!authUser && !isAuthPage) {
-      router.replace('/login');
-    }
-  }, [authLoading, authUser, isAuthPage, router]);
-
-  const isLoading = authLoading || (authUser && !isAuthPage && userProfileLoading);
-  
-  if (isLoading) {
+  if (!mounted || authLoading || (authUser && userProfileLoading)) {
     return <FullPageLoader />;
   }
 
-  if (isAuthPage) {
-      return <>{children}</>;
+  if (!authUser) {
+    return <LoginPage />;
   }
   
-  if (authUser) {
-    return <AppLayout user={userProfile}>{children}</AppLayout>;
-  }
-
-  return <FullPageLoader />;
+  return <AppLayout user={userProfile}>{children}</AppLayout>;
 }
