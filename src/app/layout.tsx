@@ -4,16 +4,12 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { AuthWrapper } from '@/components/layout/auth-wrapper';
-import { usePathname } from 'next/navigation';
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -26,7 +22,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          {isAuthPage ? children : <AuthWrapper>{children}</AuthWrapper>}
+          <AuthWrapper>{children}</AuthWrapper>
           <Toaster />
         </FirebaseClientProvider>
       </body>
