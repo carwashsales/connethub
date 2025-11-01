@@ -1,13 +1,12 @@
 'use client';
 
 import { useFirestore, useUser } from '@/firebase/index';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from './app-layout';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-import LoginPage from '@/app/login/page';
 
 function FullPageLoader() {
     return (
@@ -35,7 +34,14 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user: authUser, loading: authLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+  useEffect(() => {
+      setMounted(true);
+  }, []);
 
   const userDocRef = useMemo(() => {
     if (!db || !authUser) return null;
@@ -44,16 +50,25 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || authLoading || (authUser && userProfileLoading)) {
+  if (!mounted || authLoading) {
     return <FullPageLoader />;
   }
 
+  if (isAuthPage) {
+    if (authUser) {
+      router.push('/');
+      return <FullPageLoader />;
+    }
+    return <>{children}</>;
+  }
+
   if (!authUser) {
-    return <LoginPage />;
+    router.push('/login');
+    return <FullPageLoader />;
+  }
+
+  if (userProfileLoading) {
+    return <FullPageLoader />;
   }
   
   return <AppLayout user={userProfile}>{children}</AppLayout>;
