@@ -7,7 +7,7 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useFirestore } from '../provider';
 
 export const useDoc = <T extends DocumentData>(
@@ -18,11 +18,13 @@ export const useDoc = <T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  const refRef = useRef(ref);
-
   useEffect(() => {
+    // Set loading to true whenever the reference changes
+    setLoading(true);
+
     if (!db || !ref) {
       setLoading(false);
+      setData(null);
       return;
     }
 
@@ -35,15 +37,18 @@ export const useDoc = <T extends DocumentData>(
           setData(null);
         }
         setLoading(false);
+        setError(null);
       },
       (err: FirestoreError) => {
         setError(err);
         setLoading(false);
+        setData(null);
+        console.error("Error fetching document:", err);
       }
     );
 
     return () => unsubscribe();
-  }, [db, refRef.current]);
+  }, [db, ref]); // Rerun effect if db or ref object changes.
 
   return { data, loading, error };
 };

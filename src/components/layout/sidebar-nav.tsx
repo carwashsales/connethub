@@ -76,7 +76,7 @@ export function SidebarNav({ user }: { user: UserProfile | null }) {
         <SidebarMenu>
           {authLoading ? (
             <div className="flex items-center gap-3 p-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-10 w-10 rounded-full" />
               <div className='flex flex-col gap-1'>
                  <Skeleton className="h-4 w-20 rounded" />
                  <Skeleton className="h-3 w-16 rounded" />
@@ -87,7 +87,7 @@ export function SidebarNav({ user }: { user: UserProfile | null }) {
                 <div className="flex items-center justify-between w-full">
                     <SidebarMenuButton asChild isActive={pathname.startsWith('/profile')} tooltip="Profile" variant="ghost" className="flex-1 justify-start h-auto p-1">
                         <Link href="/profile" className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
+                            <Avatar className="h-10 w-10">
                                 <AvatarImage src={user.avatar?.url} alt={user.name} data-ai-hint={user.avatar?.hint} />
                                 <AvatarFallback>{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                             </Avatar>

@@ -7,7 +7,7 @@ import {
   FirestoreError,
   QuerySnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useFirestore } from '../provider';
 
 export const useCollection = <T extends DocumentData>(
@@ -18,11 +18,13 @@ export const useCollection = <T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  const queryRef = useRef(query);
-
   useEffect(() => {
+    // Set loading to true whenever the query changes
+    setLoading(true);
+    
     if (!db || !query) {
       setLoading(false);
+      setData(null);
       return;
     }
 
@@ -34,15 +36,18 @@ export const useCollection = <T extends DocumentData>(
         );
         setData(docs);
         setLoading(false);
+        setError(null);
       },
       (err: FirestoreError) => {
         setError(err);
         setLoading(false);
+        setData(null);
+        console.error("Error fetching collection:", err);
       }
     );
 
     return () => unsubscribe();
-  }, [db, queryRef.current]);
+  }, [db, query]); // Rerun effect if db or query object changes.
 
   return { data, loading, error };
 };

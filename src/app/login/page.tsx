@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/firebase/index';
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -27,7 +27,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: 'Success', description: 'Logged in successfully!' });
-      // No router.push here, AuthWrapper will handle it.
+      router.push('/');
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -46,7 +46,7 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
       toast({ title: 'Success', description: 'Logged in successfully!' });
-      // No router.push here, AuthWrapper will handle it.
+      router.push('/');
     } catch (error: any) {
       toast({
         title: 'Error',
