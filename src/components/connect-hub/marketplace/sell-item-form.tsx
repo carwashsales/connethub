@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,22 +15,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { createProductAction, type CreateProductState } from '@/lib/actions';
 import { useUser, useFirestore } from '@/firebase/index';
 import { Loader2 } from 'lucide-react';
 import { addDoc, collection, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
-import type { Product } from '@/lib/data';
+import type { Product } from '@/lib/types';
+import { z } from 'zod';
 
+const CreateProductSchema = z.object({
+  name: z.string().min(1, 'Item name cannot be empty.'),
+  description: z.string().min(1, 'Description cannot be empty.'),
+  price: z.coerce.number().positive('Price must be a positive number.'),
+});
 
-function SubmitButton({ isEdit }: { isEdit: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending} className="bg-primary hover:bg-primary/90">
-      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {pending ? (isEdit ? 'Saving...' : 'Listing Item...') : (isEdit ? 'Save Changes' : 'List Item for Sale')}
-    </Button>
-  );
-}
 
 type SellItemFormProps = {
   isOpen: boolean;
@@ -45,63 +39,78 @@ export function SellItemForm({ isOpen, onOpenChange, itemToEdit }: SellItemFormP
   const db = useFirestore();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
+  const [loading, setLoading] = useState(false);
   const isEdit = !!itemToEdit;
 
-  const initialState: CreateProductState = { message: null, errors: {} };
-  const [state, dispatch] = useActionState(createProductAction, initialState);
 
-  useEffect(() => {
-    async function handleFormSubmit() {
-        if (state.message && state.message.includes('validated')) {
-            const formData = new FormData(formRef.current!);
-            const name = formData.get('name') as string;
-            const description = formData.get('description') as string;
-            const price = parseFloat(formData.get('price') as string);
-            
-            if (name && description && price && authUser && db) {
-                try {
-                    if (isEdit && itemToEdit) {
-                        const itemRef = doc(db, 'products', itemToEdit.id);
-                        await updateDoc(itemRef, { name, description, price });
-                        toast({ title: 'Success!', description: 'Item updated successfully!' });
-                    } else {
-                        const imageUrl = `https://picsum.photos/seed/${Math.random()}/600/400`;
-                        const imageHint = 'new item';
-
-                        await addDoc(collection(db, 'products'), {
-                            sellerId: authUser.uid,
-                            name,
-                            description,
-                            price,
-                            image: {
-                                url: imageUrl,
-                                hint: imageHint,
-                            },
-                            createdAt: serverTimestamp(),
-                        });
-                        toast({ title: 'Success!', description: 'Item listed for sale successfully!' });
-                    }
-                    formRef.current?.reset();
-                    onOpenChange(false);
-                } catch (error) {
-                    console.error("Error writing document: ", error);
-                    toast({
-                        title: 'Database Error',
-                        description: `Could not ${isEdit ? 'update' : 'list'} item.`,
-                        variant: 'destructive',
-                    });
-                }
-            }
-        } else if (state.errors) {
-            toast({
-              title: 'Error',
-              description: state.message,
-              variant: 'destructive',
-            });
-        }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!authUser || !db) {
+        toast({ title: 'Error', description: 'You must be logged in to sell an item.', variant: 'destructive' });
+        return;
     }
-    handleFormSubmit();
-  }, [state, toast, onOpenChange, authUser, db, isEdit, itemToEdit]);
+    
+    setLoading(true);
+
+    const formData = new FormData(formRef.current!);
+    const data = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        price: formData.get('price'),
+    };
+    
+    const validatedFields = CreateProductSchema.safeParse(data);
+    
+    if (!validatedFields.success) {
+      const errorMessages = validatedFields.error.flatten().fieldErrors;
+      const firstError = Object.values(errorMessages).flat()[0] || 'Invalid data.';
+      toast({
+        title: 'Error Listing Item',
+        description: firstError,
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+    
+    const { name, description, price } = validatedFields.data;
+
+    try {
+        if (isEdit && itemToEdit) {
+            const itemRef = doc(db, 'products', itemToEdit.id);
+            await updateDoc(itemRef, { name, description, price });
+            toast({ title: 'Success!', description: 'Item updated successfully!' });
+        } else {
+            const imageUrl = `https://picsum.photos/seed/${Math.random()}/600/400`;
+            const imageHint = 'new item';
+
+            await addDoc(collection(db, 'products'), {
+                sellerId: authUser.uid,
+                name,
+                description,
+                price,
+                image: {
+                    url: imageUrl,
+                    hint: imageHint,
+                },
+                createdAt: serverTimestamp(),
+            });
+            toast({ title: 'Success!', description: 'Item listed for sale successfully!' });
+        }
+        formRef.current?.reset();
+        onOpenChange(false);
+    } catch (error) {
+        console.error("Error writing document: ", error);
+        toast({
+            title: 'Database Error',
+            description: `Could not ${isEdit ? 'update' : 'list'} item.`,
+            variant: 'destructive',
+        });
+    } finally {
+        setLoading(false);
+    }
+  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -112,43 +121,28 @@ export function SellItemForm({ isOpen, onOpenChange, itemToEdit }: SellItemFormP
             {isEdit ? "Update the details of your item." : "Fill out the details below to list your item on the marketplace."}
           </DialogDescription>
         </DialogHeader>
-        <form action={dispatch} ref={formRef} className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} ref={formRef} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Item Name
             </Label>
             <Input id="name" name="name" className="col-span-3" required defaultValue={itemToEdit?.name} />
           </div>
-          {state.errors?.name && (
-            <p className="col-span-4 text-sm text-destructive text-right -mt-2">
-              {state.errors.name.join(', ')}
-            </p>
-          )}
-
+          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Description
             </Label>
             <Textarea id="description" name="description" className="col-span-3" required defaultValue={itemToEdit?.description} />
           </div>
-          {state.errors?.description && (
-            <p className="col-span-4 text-sm text-destructive text-right -mt-2">
-              {state.errors.description.join(', ')}
-            </p>
-          )}
-
+          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="price" className="text-right">
               Price ($)
             </Label>
             <Input id="price" name="price" type="number" step="0.01" className="col-span-3" required defaultValue={itemToEdit?.price} />
           </div>
-           {state.errors?.price && (
-            <p className="col-span-4 text-sm text-destructive text-right -mt-2">
-              {state.errors.price.join(', ')}
-            </p>
-          )}
-
+          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="picture" className="text-right">
               Picture
@@ -165,7 +159,10 @@ export function SellItemForm({ isOpen, onOpenChange, itemToEdit }: SellItemFormP
                 Cancel
               </Button>
             </DialogClose>
-            <SubmitButton isEdit={isEdit} />
+            <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading ? (isEdit ? 'Saving...' : 'Listing Item...') : (isEdit ? 'Save Changes' : 'List Item')}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

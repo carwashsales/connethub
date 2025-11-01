@@ -1,4 +1,4 @@
-
+import type { Timestamp } from 'firebase/firestore';
 
 export type UserProfile = {
   id: string;
@@ -22,7 +22,7 @@ export type Product = {
         url: string;
         hint: string;
     };
-    createdAt: any;
+    createdAt: Timestamp;
 };
 
 export type Post = {
@@ -30,7 +30,7 @@ export type Post = {
   authorId: string;
   content: string;
   image?: { url: string; hint: string };
-  createdAt: any;
+  createdAt: Timestamp;
   likes: number;
   likedBy: string[];
   comments: number;
@@ -45,7 +45,7 @@ export type LostFoundItem = {
   contact: string;
   userId: string;
   image: { url: string; hint: string };
-  createdAt: any;
+  createdAt: Timestamp;
 };
 
 export type Conversation = {
@@ -53,12 +53,12 @@ export type Conversation = {
   participantIds: string[];
   participants: { [key: string]: UserProfile };
   lastMessageText?: string;
-  lastMessageAt?: any;
+  lastMessageAt?: Timestamp;
 };
 
 export type Message = {
   id: string;
   text: string;
-  createdAt: any;
+  createdAt: Timestamp;
   senderId: string;
 };

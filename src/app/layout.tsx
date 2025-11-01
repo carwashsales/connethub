@@ -10,7 +10,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -23,8 +22,8 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-            <AuthWrapper>{children}</AuthWrapper>
-            <Toaster />
+          <AuthWrapper>{children}</AuthWrapper>
+          <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>

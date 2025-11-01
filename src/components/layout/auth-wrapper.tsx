@@ -34,13 +34,8 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const userDocRef = useMemo(() => {
     if (!db || !authUser) return null;
@@ -50,41 +45,26 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (!mounted || authLoading) {
-      return; // Wait until component is mounted and auth state is resolved
-    }
-    
-    if (isAuthPage && authUser) {
-      router.push('/');
-    }
-
-    if (!isAuthPage && !authUser) {
+    if (!authLoading && !authUser && !isAuthPage) {
       router.push('/login');
     }
-  }, [mounted, authUser, authLoading, isAuthPage, router]);
+  }, [authLoading, authUser, isAuthPage, router]);
 
-
-  if (!mounted || authLoading || (authUser && userProfileLoading)) {
+  if (authLoading || (authUser && userProfileLoading)) {
     return <FullPageLoader />;
   }
 
   if (isAuthPage) {
-    if (authUser) {
-      // While redirecting, show a loader
-      return <FullPageLoader />;
-    }
     return <>{children}</>;
   }
-
-  if (!authUser) {
-    // While redirecting, show a loader
-    return <FullPageLoader />;
-  }
   
-  if (userProfile) {
+  if (authUser && userProfile) {
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
 
-  // Fallback loader if profile is still loading or in an unexpected state
-  return <FullPageLoader />;
+  if (!authUser && !isAuthPage) {
+    return <FullPageLoader />;
+  }
+  
+  return <>{children}</>;
 }
