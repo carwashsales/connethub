@@ -29,13 +29,20 @@ function FullPageLoader() {
     )
 }
 
+const PUBLIC_PATHS = ['/login', '/signup'];
+
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user: authUser, loading: authLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
 
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isPublicPage = PUBLIC_PATHS.includes(pathname);
 
   const userDocRef = useMemo(() => {
     if (!db || !authUser) return null;
@@ -45,26 +52,29 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (!authLoading && !authUser && !isAuthPage) {
+    if (!mounted || authLoading) return;
+
+    if (authUser && isPublicPage) {
+      router.push('/');
+    }
+    if (!authUser && !isPublicPage) {
       router.push('/login');
     }
-  }, [authLoading, authUser, isAuthPage, router]);
+  }, [mounted, authLoading, authUser, isPublicPage, router, pathname]);
 
-  if (authLoading || (authUser && userProfileLoading)) {
+  if (!mounted || authLoading || (authUser && userProfileLoading && !isPublicPage)) {
     return <FullPageLoader />;
   }
 
-  if (isAuthPage) {
-    return <>{children}</>;
+  if (isPublicPage) {
+    return authUser ? <FullPageLoader /> : <>{children}</>;
   }
   
-  if (authUser && userProfile) {
-    return <AppLayout user={userProfile}>{children}</AppLayout>;
-  }
-
-  if (!authUser && !isAuthPage) {
-    return <FullPageLoader />;
+  if (authUser) {
+    if (userProfile) {
+      return <AppLayout user={userProfile}>{children}</AppLayout>;
+    }
   }
   
-  return <>{children}</>;
+  return <FullPageLoader />;
 }

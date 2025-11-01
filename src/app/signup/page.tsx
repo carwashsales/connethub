@@ -47,7 +47,7 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await createUserProfile(userCredential.user, name);
       toast({ title: 'Success', description: 'Account created successfully!' });
-      router.push('/');
+      // No router.push here, AuthWrapper will handle it.
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -67,7 +67,7 @@ export default function SignupPage() {
       const userCredential = await signInWithPopup(auth, provider);
       await createUserProfile(userCredential.user);
       toast({ title: 'Success', description: 'Account created successfully!' });
-      router.push('/');
+      // No router.push here, AuthWrapper will handle it.
     } catch (error: any) {
       toast({
         title: 'Error',

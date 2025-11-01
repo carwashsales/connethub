@@ -27,7 +27,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: 'Success', description: 'Logged in successfully!' });
-      router.push('/');
+      // No router.push here, AuthWrapper will handle it.
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -46,7 +46,7 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
       toast({ title: 'Success', description: 'Logged in successfully!' });
-      router.push('/');
+      // No router.push here, AuthWrapper will handle it.
     } catch (error: any) {
       toast({
         title: 'Error',

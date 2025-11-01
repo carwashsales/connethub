@@ -94,7 +94,6 @@ export function ItemCard({ item }: ItemCardProps) {
         toast({ title: "Success", description: "Item deleted." });
       } catch (error) {
         toast({ title: "Error", description: "Failed to delete item.", variant: "destructive" });
-        console.error(error);
       }
       setIsDeleteAlertOpen(false);
   }

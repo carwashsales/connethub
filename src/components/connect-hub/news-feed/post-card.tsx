@@ -63,7 +63,6 @@ function EditPostDialog({ post, isOpen, onOpenChange }: { post: Post; isOpen: bo
             onOpenChange(false);
         } catch (error) {
             toast({ title: "Error", description: "Failed to update post.", variant: "destructive" });
-            console.error(error);
         } finally {
             setLoading(false);
         }
@@ -133,7 +132,6 @@ export function PostCard({ post }: PostCardProps) {
         toast({ title: "Success", description: "Post deleted." });
       } catch (error) {
         toast({ title: "Error", description: "Failed to delete post.", variant: "destructive" });
-        console.error(error);
       }
       setIsDeleteAlertOpen(false);
   }
