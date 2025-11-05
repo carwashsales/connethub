@@ -4,6 +4,7 @@ import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
 import { createContext, useContext } from 'react';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export interface FirebaseContextValue {
   app: FirebaseApp | null;
@@ -19,6 +20,7 @@ export const FirebaseProvider: React.FC<
   return (
     <FirebaseContext.Provider value={value}>
       {children}
+      <FirebaseErrorListener />
     </FirebaseContext.Provider>
   );
 };

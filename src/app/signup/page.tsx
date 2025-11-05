@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
 import { Chrome } from 'lucide-react';
 import Link from 'next/link';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function SignupPage() {
   const auth = useAuth();
@@ -23,10 +25,11 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const createUserProfile = async (user: User, displayName?: string | null) => {
-    if (!db) return;
+  const createUserProfile = (user: User, displayName?: string | null) => {
+    if (!db) return Promise.resolve();
+
     const userRef = doc(db, 'users', user.uid);
-    const newUser = {
+    const newUserProfile = {
       uid: user.uid,
       name: displayName || user.displayName || 'New User',
       email: user.email,
@@ -36,7 +39,18 @@ export default function SignupPage() {
       },
       bio: '',
     };
-    await setDoc(userRef, newUser);
+    
+    return setDoc(userRef, newUserProfile)
+      .catch(serverError => {
+        const permissionError = new FirestorePermissionError({
+          path: userRef.path,
+          operation: 'create',
+          requestResourceData: newUserProfile,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        // Also throw to stop the promise chain and prevent redirection
+        throw permissionError;
+      });
   };
 
   const handleEmailSignup = async (e: React.FormEvent) => {
@@ -49,11 +63,14 @@ export default function SignupPage() {
       toast({ title: 'Success', description: 'Account created successfully!' });
       router.push('/');
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      // We only toast for non-permission errors now
+      if (!(error instanceof FirestorePermissionError)) {
+          toast({
+            title: 'Error',
+            description: error.message,
+            variant: 'destructive',
+          });
+      }
     } finally {
       setLoading(false);
     }
@@ -69,11 +86,13 @@ export default function SignupPage() {
       toast({ title: 'Success', description: 'Account created successfully!' });
       router.push('/');
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+       if (!(error instanceof FirestorePermissionError)) {
+          toast({
+            title: 'Error',
+            description: error.message,
+            variant: 'destructive',
+          });
+      }
     } finally {
       setLoading(false);
     }
