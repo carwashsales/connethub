@@ -59,7 +59,7 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await createUserProfile(userCredential.user, name);
-      // No router.push needed here, AuthWrapper will handle it.
+      // AuthWrapper will handle redirection.
       toast({ title: 'Success', description: 'Account created successfully!' });
     } catch (error: any) {
       if (!(error instanceof FirestorePermissionError)) {
@@ -81,7 +81,7 @@ export default function SignupPage() {
     try {
       const userCredential = await signInWithPopup(auth, provider);
       await createUserProfile(userCredential.user);
-      // No router.push needed here, AuthWrapper will handle it.
+      // AuthWrapper will handle redirection.
       toast({ title: 'Success', description: 'Account created successfully!' });
     } catch (error: any) {
        if (!(error instanceof FirestorePermissionError)) {

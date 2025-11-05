@@ -7,7 +7,7 @@ import {
   FirestoreError,
   QuerySnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useMemoDeep } from '@/hooks/use-memo-deep';
 
 export const useCollection = <T extends DocumentData>(

@@ -24,7 +24,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // No router.push needed here, AuthWrapper will handle it.
+      // AuthWrapper will handle redirection.
       toast({ title: 'Success', description: 'Logged in successfully!' });
     } catch (error: any) {
       toast({
@@ -43,7 +43,7 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // No router.push needed here, AuthWrapper will handle it.
+      // AuthWrapper will handle redirection.
       toast({ title: 'Success', description: 'Logged in successfully!' });
     } catch (error: any) {
       toast({

@@ -10,7 +10,7 @@ import {
   SidebarGroup,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { Home, Store, Search, MessageSquare, Settings, LogIn, LogOut, UserPlus } from 'lucide-react';
+import { Home, Store, Search, MessageSquare, Settings, LogIn, LogOut, UserPlus, UserCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
@@ -89,7 +89,7 @@ export function SidebarNav({ user }: { user: UserProfile | null }) {
                         <Link href="/profile" className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
                                 <AvatarImage src={user.avatar?.url} alt={user.name} data-ai-hint={user.avatar?.hint} />
-                                <AvatarFallback>{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                                <AvatarFallback>{user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || <UserCircle />}</AvatarFallback>
                             </Avatar>
                              <div className="flex flex-col items-start text-left">
                                 <span className="text-sm font-medium">{user.name}</span>
