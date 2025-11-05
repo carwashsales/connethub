@@ -7,7 +7,9 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useMemoDeep } from '@/hooks/use-memo-deep';
+
 
 export const useDoc = <T extends DocumentData>(
   ref: DocumentReference<T> | null
@@ -16,8 +18,10 @@ export const useDoc = <T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
+  const stableRef = useMemoDeep(ref);
+
   useEffect(() => {
-    if (!ref) {
+    if (!stableRef) {
       setLoading(false);
       setData(null);
       return;
@@ -26,7 +30,7 @@ export const useDoc = <T extends DocumentData>(
     setLoading(true);
 
     const unsubscribe = onSnapshot(
-      ref,
+      stableRef,
       (snapshot: DocumentSnapshot<T>) => {
         if (snapshot.exists()) {
           setData({ ...snapshot.data(), id: snapshot.id } as T);
@@ -37,7 +41,7 @@ export const useDoc = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
-        console.error(`Error fetching document at ${ref.path}:`, err);
+        console.error(`Error fetching document at ${stableRef.path}:`, err);
         setError(err);
         setLoading(false);
         setData(null);
@@ -45,7 +49,7 @@ export const useDoc = <T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [ref?.path]); 
+  }, [stableRef]); 
 
   return { data, loading, error };
 };

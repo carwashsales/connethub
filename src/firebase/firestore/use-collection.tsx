@@ -6,9 +6,9 @@ import {
   DocumentData,
   FirestoreError,
   QuerySnapshot,
-  queryEqual,
 } from 'firebase/firestore';
 import { useEffect, useState, useRef } from 'react';
+import { useMemoDeep } from '@/hooks/use-memo-deep';
 
 export const useCollection = <T extends DocumentData>(
   q: Query<T> | null
@@ -17,29 +17,22 @@ export const useCollection = <T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  // Use a ref to store the previous query to compare against
-  const previousQueryRef = useRef<Query<T> | null>(null);
+  // Memoize the query to prevent re-renders from creating new query objects
+  const stableQuery = useMemoDeep(q);
 
   useEffect(() => {
     // If the query is null, reset state and do nothing.
-    if (!q) {
+    if (!stableQuery) {
       setData(null);
       setLoading(false);
       setError(null);
       return;
     }
 
-    // If the query is the same as the previous one, do nothing.
-    if (previousQueryRef.current && queryEqual(previousQueryRef.current, q)) {
-      return;
-    }
-    
-    // Update the ref to the new query for the next render.
-    previousQueryRef.current = q;
     setLoading(true);
 
     const unsubscribe = onSnapshot(
-      q,
+      stableQuery,
       (snapshot: QuerySnapshot<T>) => {
         const docs = snapshot.docs.map(
           (doc) => ({ ...doc.data(), id: doc.id } as T)
@@ -57,7 +50,7 @@ export const useCollection = <T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [q]); // The effect now depends directly on the query object `q`.
+  }, [stableQuery]); // The effect now depends on the memoized query
 
   return { data, loading, error };
 };

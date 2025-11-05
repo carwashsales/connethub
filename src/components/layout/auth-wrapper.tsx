@@ -47,48 +47,32 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    // If we are still loading authentication state, don't do any redirects yet.
-    if (authLoading) {
-      return; 
-    }
+    if (authLoading) return; // Wait until authentication state is determined
 
-    // If the user is authenticated...
-    if (authUser) {
-      // ...and they are on a public page (like login), redirect them to the home page.
-      if (isPublicPage) {
+    if (authUser && isPublicPage) {
+        // Authenticated user on a public page, redirect to home
         router.push('/');
-      }
-    } 
-    // If the user is not authenticated...
-    else {
-      // ...and they are on a protected page, redirect them to the login page.
-      if (!isPublicPage) {
+    } else if (!authUser && !isPublicPage) {
+        // Unauthenticated user on a protected page, redirect to login
         router.push('/login');
-      }
     }
-  }, [authLoading, authUser, isPublicPage, router]);
+  }, [authLoading, authUser, isPublicPage, pathname, router]);
 
-  // While checking auth state or fetching the user profile, show a loader.
+
   if (authLoading || (authUser && userProfileLoading)) {
       return <FullPageLoader />;
   }
 
-  // If on a public page and not logged in, show the page (e.g., login form).
-  if (isPublicPage && !authUser) {
+  if (authUser && userProfile) {
+    // User is authenticated and profile is loaded, show the app
+    return <AppLayout user={userProfile}>{children}</AppLayout>;
+  }
+
+  if (!authUser && isPublicPage) {
+    // Unauthenticated user on a public page, show login/signup
     return <>{children}</>;
   }
 
-  // If the user is fully authenticated and has a profile, show the app layout.
-  if (authUser && userProfile) {
-    return <AppLayout user={userProfile}>{children}</AppLayout>;
-  }
-  
-  // If we are on a protected page and the user is not logged in, the useEffect will
-  // trigger a redirect, so we show a loader while that happens.
-  if (!authUser && !isPublicPage) {
-    return <FullPageLoader />;
-  }
-  
-  // Fallback to render children if no other condition is met.
-  return <>{children}</>;
+  // Fallback for transitional states, like redirecting.
+  return <FullPageLoader />;
 }
