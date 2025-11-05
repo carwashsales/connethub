@@ -16,7 +16,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { AdBanner } from '../connect-hub/shared/ad-banner';
-import { useAuth } from '@/firebase/index';
+import { useAuth, useUser } from '@/firebase/index';
 import { Skeleton } from '../ui/skeleton';
 
 const navItems = [
@@ -29,6 +29,7 @@ const navItems = [
 export function SidebarNav({ user }: { user: UserProfile | null }) {
   const pathname = usePathname();
   const auth = useAuth();
+  const {loading: authLoading} = useUser();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -73,7 +74,7 @@ export function SidebarNav({ user }: { user: UserProfile | null }) {
       <SidebarFooter className='p-2'>
         <Separator className="my-2" />
         <SidebarMenu>
-          {!user ? (
+          {authLoading ? (
              <div className="flex items-center gap-3 p-2">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className='flex flex-col gap-1'>

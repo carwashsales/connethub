@@ -60,9 +60,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     }
   }, [authLoading, userProfileLoading, authUser, isPublicPage, router, pathname]);
 
-  const isLoading = authLoading || (authUser && userProfileLoading);
-
-  if (isLoading) {
+  if (authLoading || (authUser && userProfileLoading)) {
       return <FullPageLoader />;
   }
 

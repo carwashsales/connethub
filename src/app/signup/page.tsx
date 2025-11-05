@@ -40,6 +40,7 @@ export default function SignupPage() {
       bio: '',
     };
     
+    // Do not await here, chain the .catch()
     return setDoc(userRef, newUserProfile)
       .catch(serverError => {
         const permissionError = new FirestorePermissionError({
@@ -63,7 +64,6 @@ export default function SignupPage() {
       toast({ title: 'Success', description: 'Account created successfully!' });
       router.push('/');
     } catch (error: any) {
-      // We only toast for non-permission errors now
       if (!(error instanceof FirestorePermissionError)) {
           toast({
             title: 'Error',
