@@ -7,24 +7,16 @@ import {
   FirestoreError,
   QuerySnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
-// Helper to check for deep equality in objects, arrays, etc.
-const deepEqual = (a: any, b: any) => {
-  if (a === b) return true;
-  if (a && b && typeof a === 'object' && typeof b === 'object') {
-    if (a.constructor !== b.constructor) return false;
-
-    let length = Object.keys(a).length;
-    if (length !== Object.keys(b).length) return false;
-    for (let i = 0; i < length; i++) {
-      const key = Object.keys(a)[i];
-      if (!b.hasOwnProperty(key) || !deepEqual(a[key], b[key])) return false;
+// Custom hook to deeply compare query objects
+const useCompareMemo = <T,>(value: T) => {
+    const ref = React.useRef<T>();
+    if (!value || !ref.current || JSON.stringify(value) !== JSON.stringify(ref.current)) {
+        ref.current = value;
     }
-    return true;
-  }
-  return false;
-};
+    return ref.current;
+}
 
 
 export const useCollection = <T extends DocumentData>(
@@ -34,26 +26,19 @@ export const useCollection = <T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  // Use a ref to store the previous query to compare against
-  const previousQueryRef = useRef<Query<T> | null>(null);
+  const memoizedQuery = useCompareMemo(query);
 
   useEffect(() => {
-    // If the query is deeply equal to the previous one, do nothing.
-    if (deepEqual(previousQueryRef.current, query)) {
-      return;
-    }
-
-    previousQueryRef.current = query;
     setLoading(true);
     
-    if (!query) {
+    if (!memoizedQuery) {
       setLoading(false);
       setData(null);
       return;
     }
 
     const unsubscribe = onSnapshot(
-      query,
+      memoizedQuery,
       (snapshot: QuerySnapshot<T>) => {
         const docs = snapshot.docs.map(
           (doc) => ({ ...doc.data(), id: doc.id } as T)
@@ -71,7 +56,7 @@ export const useCollection = <T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [query]);
+  }, [memoizedQuery]);
 
   return { data, loading, error };
 };
