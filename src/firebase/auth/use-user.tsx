@@ -11,16 +11,22 @@ export function useUser() {
 
   useEffect(() => {
     if (!auth) {
+      console.log('useUser: Auth service not available.');
       setLoading(false);
       return;
     }
 
+    console.log('useUser: Subscribing to onAuthStateChanged.');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('useUser: onAuthStateChanged callback fired. User authenticated:', !!user);
       setUser(user);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('useUser: Unsubscribing from onAuthStateChanged.');
+      unsubscribe();
+    };
   }, [auth]);
 
   return {user, loading};

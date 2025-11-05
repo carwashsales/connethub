@@ -21,34 +21,41 @@ export const useDoc = <T extends DocumentData>(
 
   useEffect(() => {
     if (!stableRef) {
+      console.log('useDoc: Ref is null, resetting state.');
       setLoading(false);
       setData(null);
       setError(null);
       return;
     }
 
+    console.log(`useDoc: Subscribing to snapshot for path: ${stableRef.path}`);
     setLoading(true);
 
     const unsubscribe = onSnapshot(
       stableRef,
       (snapshot: DocumentSnapshot<T>) => {
         if (snapshot.exists()) {
+          console.log(`useDoc: Snapshot received, document exists at path ${stableRef.path}`);
           setData({ ...snapshot.data(), id: snapshot.id } as T);
         } else {
+          console.log(`useDoc: Snapshot received, document does not exist at path ${stableRef.path}`);
           setData(null);
         }
         setLoading(false);
         setError(null);
       },
       (err: FirestoreError) => {
-        console.error(`Error fetching document at ${stableRef.path}:`, err);
+        console.error(`useDoc: Error fetching document at ${stableRef.path}:`, err);
         setError(err);
         setLoading(false);
         setData(null);
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+        console.log(`useDoc: Unsubscribing from snapshot for path: ${stableRef.path}`);
+        unsubscribe();
+    };
   }, [stableRef]); 
 
   return { data, loading, error };

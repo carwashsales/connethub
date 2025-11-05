@@ -17,23 +17,24 @@ export const useCollection = <T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  // Memoize the query to prevent re-renders from creating new query objects
   const stableQuery = useMemoDeep(q);
 
   useEffect(() => {
-    // If the query is null, reset state and do nothing.
     if (!stableQuery) {
+      console.log('useCollection: Query is null, resetting state.');
       setData(null);
       setLoading(false);
       setError(null);
       return;
     }
 
+    console.log(`useCollection: Subscribing to snapshot for path: ${(stableQuery as any)._query.path.segments.join('/')}`);
     setLoading(true);
 
     const unsubscribe = onSnapshot(
       stableQuery,
       (snapshot: QuerySnapshot<T>) => {
+        console.log(`useCollection: Snapshot received with ${snapshot.docs.length} documents.`);
         const docs = snapshot.docs.map(
           (doc) => ({ ...doc.data(), id: doc.id } as T)
         );
@@ -42,15 +43,18 @@ export const useCollection = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
-        console.error("Error fetching collection:", err);
+        console.error("useCollection: Error fetching collection:", err);
         setError(err);
         setLoading(false);
         setData(null);
       }
     );
 
-    return () => unsubscribe();
-  }, [stableQuery]); // The effect now depends on the memoized query
+    return () => {
+      console.log(`useCollection: Unsubscribing from snapshot for path: ${(stableQuery as any)._query.path.segments.join('/')}`);
+      unsubscribe();
+    };
+  }, [stableQuery]);
 
   return { data, loading, error };
 };
