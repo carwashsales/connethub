@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth, useFirestore } from '@/firebase/index';
 import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithPopup, type User } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
 import { Chrome } from 'lucide-react';
@@ -18,7 +17,6 @@ import { FirestorePermissionError } from '@/firebase/errors';
 export default function SignupPage() {
   const auth = useAuth();
   const db = useFirestore();
-  const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,8 +59,8 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await createUserProfile(userCredential.user, name);
+      // No router.push needed here, AuthWrapper will handle it.
       toast({ title: 'Success', description: 'Account created successfully!' });
-      router.push('/');
     } catch (error: any) {
       if (!(error instanceof FirestorePermissionError)) {
           toast({
@@ -83,8 +81,8 @@ export default function SignupPage() {
     try {
       const userCredential = await signInWithPopup(auth, provider);
       await createUserProfile(userCredential.user);
+      // No router.push needed here, AuthWrapper will handle it.
       toast({ title: 'Success', description: 'Account created successfully!' });
-      router.push('/');
     } catch (error: any) {
        if (!(error instanceof FirestorePermissionError)) {
           toast({

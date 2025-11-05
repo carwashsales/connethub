@@ -16,17 +16,14 @@ export const useDoc = <T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  const refPath = ref?.path;
-
   useEffect(() => {
-    setLoading(true);
-    setData(null);
-    setError(null);
-
     if (!ref) {
       setLoading(false);
+      setData(null);
       return;
     }
+
+    setLoading(true);
 
     const unsubscribe = onSnapshot(
       ref,
@@ -48,7 +45,7 @@ export const useDoc = <T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [refPath]); 
+  }, [ref?.path]); 
 
   return { data, loading, error };
 };

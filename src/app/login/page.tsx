@@ -10,11 +10,9 @@ import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from 
 import { useToast } from '@/hooks/use-toast';
 import { Chrome } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const auth = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,8 +24,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      // No router.push needed here, AuthWrapper will handle it.
       toast({ title: 'Success', description: 'Logged in successfully!' });
-      router.push('/');
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -45,8 +43,8 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      // No router.push needed here, AuthWrapper will handle it.
       toast({ title: 'Success', description: 'Logged in successfully!' });
-      router.push('/');
     } catch (error: any) {
       toast({
         title: 'Error',

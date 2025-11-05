@@ -17,28 +17,26 @@ export const useCollection = <T extends DocumentData>(
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  const queryRef = useRef<Query<T> | null>(null);
+  // Use a ref to store the previous query to compare against
+  const previousQueryRef = useRef<Query<T> | null>(null);
 
   useEffect(() => {
-    
-    if (q === null && queryRef.current === null) {
-      setLoading(false);
-      return;
-    }
-
-    if(q && queryRef.current && queryEqual(q, queryRef.current)) {
-      return;
-    }
-    
-    setLoading(true);
-    setData(null);
-    setError(null);
-    queryRef.current = q;
-
+    // If the query is null, reset state and do nothing.
     if (!q) {
+      setData(null);
       setLoading(false);
+      setError(null);
       return;
     }
+
+    // If the query is the same as the previous one, do nothing.
+    if (previousQueryRef.current && queryEqual(previousQueryRef.current, q)) {
+      return;
+    }
+    
+    // Update the ref to the new query for the next render.
+    previousQueryRef.current = q;
+    setLoading(true);
 
     const unsubscribe = onSnapshot(
       q,
@@ -59,7 +57,7 @@ export const useCollection = <T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [q]);
+  }, [q]); // The effect now depends directly on the query object `q`.
 
   return { data, loading, error };
 };
