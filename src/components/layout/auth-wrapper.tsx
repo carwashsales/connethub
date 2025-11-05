@@ -2,7 +2,7 @@
 
 import { useUser, useFirestore } from '@/firebase/index';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from './app-layout';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
@@ -47,7 +47,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (authLoading) {
+    if (authLoading || userProfileLoading) {
       return; 
     }
 
@@ -58,7 +58,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     if (!authUser && !isPublicPage) {
       router.push('/login');
     }
-  }, [authLoading, authUser, isPublicPage, router, pathname]);
+  }, [authLoading, userProfileLoading, authUser, isPublicPage, router, pathname]);
 
   const isLoading = authLoading || (authUser && userProfileLoading);
 
@@ -73,6 +73,10 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   if (authUser && userProfile) {
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
+  
+  if (!authUser && !isPublicPage) {
+    return <FullPageLoader />;
+  }
 
-  return <FullPageLoader />;
+  return <>{children}</>;
 }

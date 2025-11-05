@@ -6,39 +6,42 @@ import {
   DocumentData,
   FirestoreError,
   QuerySnapshot,
+  queryEqual,
 } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
-
-// Custom hook to deeply compare query objects
-const useCompareMemo = <T,>(value: T) => {
-    const ref = React.useRef<T>();
-    if (!value || !ref.current || JSON.stringify(value) !== JSON.stringify(ref.current)) {
-        ref.current = value;
-    }
-    return ref.current;
-}
-
+import { useEffect, useState, useRef } from 'react';
 
 export const useCollection = <T extends DocumentData>(
-  query: Query<T> | null
+  q: Query<T> | null
 ) => {
   const [data, setData] = useState<T[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
-  const memoizedQuery = useCompareMemo(query);
+  const queryRef = useRef<Query<T> | null>(null);
 
   useEffect(() => {
-    setLoading(true);
     
-    if (!memoizedQuery) {
+    if (q === null && queryRef.current === null) {
       setLoading(false);
-      setData(null);
+      return;
+    }
+
+    if(q && queryRef.current && queryEqual(q, queryRef.current)) {
+      return;
+    }
+    
+    setLoading(true);
+    setData(null);
+    setError(null);
+    queryRef.current = q;
+
+    if (!q) {
+      setLoading(false);
       return;
     }
 
     const unsubscribe = onSnapshot(
-      memoizedQuery,
+      q,
       (snapshot: QuerySnapshot<T>) => {
         const docs = snapshot.docs.map(
           (doc) => ({ ...doc.data(), id: doc.id } as T)
@@ -48,15 +51,15 @@ export const useCollection = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
+        console.error("Error fetching collection:", err);
         setError(err);
         setLoading(false);
         setData(null);
-        console.error("Error fetching collection:", err);
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedQuery]);
+  }, [q]);
 
   return { data, loading, error };
 };

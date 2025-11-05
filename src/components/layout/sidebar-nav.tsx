@@ -16,7 +16,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { AdBanner } from '../connect-hub/shared/ad-banner';
-import { useAuth, useUser } from '@/firebase/index';
+import { useAuth } from '@/firebase/index';
 import { Skeleton } from '../ui/skeleton';
 
 const navItems = [
@@ -28,7 +28,6 @@ const navItems = [
 
 export function SidebarNav({ user }: { user: UserProfile | null }) {
   const pathname = usePathname();
-  const { user: authUser, loading: authLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
 
@@ -74,15 +73,15 @@ export function SidebarNav({ user }: { user: UserProfile | null }) {
       <SidebarFooter className='p-2'>
         <Separator className="my-2" />
         <SidebarMenu>
-          {authLoading ? (
-            <div className="flex items-center gap-3 p-2">
+          {!user ? (
+             <div className="flex items-center gap-3 p-2">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className='flex flex-col gap-1'>
                  <Skeleton className="h-4 w-20 rounded" />
                  <Skeleton className="h-3 w-16 rounded" />
               </div>
             </div>
-          ) : authUser && user ? (
+          ) : user ? (
              <SidebarMenuItem>
                 <div className="flex items-center justify-between w-full">
                     <SidebarMenuButton asChild isActive={pathname.startsWith('/profile')} tooltip="Profile" variant="ghost" className="flex-1 justify-start h-auto p-1">

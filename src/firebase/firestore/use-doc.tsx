@@ -7,8 +7,7 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
-
+import { useEffect, useState } from 'react';
 
 export const useDoc = <T extends DocumentData>(
   ref: DocumentReference<T> | null
@@ -21,9 +20,10 @@ export const useDoc = <T extends DocumentData>(
 
   useEffect(() => {
     setLoading(true);
+    setData(null);
+    setError(null);
 
     if (!ref) {
-      setData(null);
       setLoading(false);
       return;
     }
@@ -40,10 +40,10 @@ export const useDoc = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
+        console.error(`Error fetching document at ${ref.path}:`, err);
         setError(err);
         setLoading(false);
         setData(null);
-        console.error(`Error fetching document at ${ref.path}:`, err);
       }
     );
 
