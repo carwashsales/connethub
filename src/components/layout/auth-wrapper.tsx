@@ -1,18 +1,12 @@
 'use client';
 
-import { useUser } from '@/firebase/index';
+import { useUser, useFirestore } from '@/firebase/index';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AppLayout } from './app-layout';
 import { useDoc } from '@/firebase/firestore/use-doc';
-import { doc, getFirestore } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-import { initializeFirebase } from '@/firebase';
-
-// Initialize outside of component to avoid re-running on every render.
-// This is safe because we are using getApps() check inside.
-const { firestore } = initializeFirebase();
-
 
 function FullPageLoader() {
     return (
@@ -39,19 +33,18 @@ const PUBLIC_PATHS = ['/login', '/signup'];
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user: authUser, loading: authLoading } = useUser();
+  const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
-  // This ensures client-side logic only runs after mount.
   useEffect(() => {
     setMounted(true);
   }, []);
-
+  
   const isPublicPage = PUBLIC_PATHS.includes(pathname);
 
-  // We can safely create the userDocRef here because `useDoc` is now stable
-  const userDocRef = authUser ? doc(firestore, 'users', authUser.uid) : null;
+  const userDocRef = authUser ? doc(db, 'users', authUser.uid) : null;
   const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
   
   useEffect(() => {
@@ -66,24 +59,19 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     }
   }, [mounted, authLoading, authUser, isPublicPage, router, pathname]);
 
-
   if (!mounted) {
     return <FullPageLoader />;
   }
 
-  if (isPublicPage) {
-     // If we are on a public page and logged in, show loader while redirecting.
-    if(authUser) {
-      return <FullPageLoader />;
-    }
-    // Otherwise, show the public page content (Login or Signup).
+  // If we are on a public page and not logged in, show the page.
+  if (isPublicPage && !authUser) {
     return <>{children}</>;
   }
 
-  // If we are on a protected page, we need auth and profile data.
-  // Show loader until both are resolved.
-  if (authLoading || (authUser && userProfileLoading)) {
-    return <FullPageLoader />;
+  // For any other case, we need to determine the loading state.
+  const isLoading = authLoading || (authUser && userProfileLoading);
+  if (isLoading) {
+      return <FullPageLoader />;
   }
 
   // If we have an auth user and their profile, render the main app layout.
@@ -91,7 +79,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
 
-  // If we are on a protected page and there's no auth user after loading,
-  // show loader while redirecting to login.
+  // If we are on a protected page without a user, or a public page with a user,
+  // we are in a transition state (redirecting), so show the loader.
   return <FullPageLoader />;
 }

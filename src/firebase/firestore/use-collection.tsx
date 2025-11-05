@@ -7,22 +7,46 @@ import {
   FirestoreError,
   QuerySnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
-import { useFirestore } from '../provider';
+import { useEffect, useState, useRef } from 'react';
+
+// Helper to check for deep equality in objects, arrays, etc.
+const deepEqual = (a: any, b: any) => {
+  if (a === b) return true;
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
+    if (a.constructor !== b.constructor) return false;
+
+    let length = Object.keys(a).length;
+    if (length !== Object.keys(b).length) return false;
+    for (let i = 0; i < length; i++) {
+      const key = Object.keys(a)[i];
+      if (!b.hasOwnProperty(key) || !deepEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+  return false;
+};
+
 
 export const useCollection = <T extends DocumentData>(
   query: Query<T> | null
 ) => {
-  const db = useFirestore();
   const [data, setData] = useState<T[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
+  // Use a ref to store the previous query to compare against
+  const previousQueryRef = useRef<Query<T> | null>(null);
+
   useEffect(() => {
-    // Set loading to true whenever the query changes
+    // If the query is deeply equal to the previous one, do nothing.
+    if (deepEqual(previousQueryRef.current, query)) {
+      return;
+    }
+
+    previousQueryRef.current = query;
     setLoading(true);
     
-    if (!db || !query) {
+    if (!query) {
       setLoading(false);
       setData(null);
       return;
@@ -47,7 +71,7 @@ export const useCollection = <T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [db, query]); // Rerun effect if db or query object changes.
+  }, [query]);
 
   return { data, loading, error };
 };
