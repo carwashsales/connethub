@@ -58,7 +58,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   console.log(`[AuthWrapper] userProfile state:`, { userProfile: !!userProfile, userProfileLoading });
 
   useEffect(() => {
-    console.log('[AuthWrapper useEffect] Running checks...', { authLoading, authUser, userProfile: !!userProfile, userProfileLoading, isPublicPage, pathname });
+    console.log('[AuthWrapper useEffect] Running checks...', { authLoading, authUser: !!authUser, userProfile: !!userProfile, userProfileLoading, isPublicPage, pathname });
     if (authLoading) {
       console.log('[AuthWrapper useEffect] Auth is loading. No action.');
       return;
@@ -71,9 +71,6 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       console.log('[AuthWrapper useEffect] Auth user on public page. Redirecting to /.');
       router.push('/');
     } else if (authUser && !userProfile && !userProfileLoading) {
-      // This is the new crucial check.
-      // If the user is authenticated but their profile doesn't exist and we are done loading,
-      // it means their user record is incomplete. We should sign them out and ask them to log in again.
       console.log('[AuthWrapper useEffect] CRITICAL: User is authenticated but profile document does not exist. Signing out.');
       toast({
         title: 'User Profile Missing',

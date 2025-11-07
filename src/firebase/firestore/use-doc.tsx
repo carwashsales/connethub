@@ -7,7 +7,7 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useMemoDeep } from '@/hooks/use-memo-deep';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
@@ -23,17 +23,20 @@ export const useDoc = <T extends DocumentData>(
 
   useEffect(() => {
     if (!stableRef) {
+      console.log('[useDoc] Ref is null. Clearing state.');
       setData(null);
       setLoading(false);
       setError(null);
       return;
     }
     
+    console.log(`[useDoc] New ref for path: ${stableRef.path}. Setting loading and listener.`);
     setLoading(true);
 
     const unsubscribe = onSnapshot(
       stableRef,
       (snapshot: DocumentSnapshot<T>) => {
+        console.log(`[useDoc] onSnapshot fired for path: ${stableRef.path}. Exists: ${snapshot.exists()}`);
         if (snapshot.exists()) {
           const docData = { ...snapshot.data(), id: snapshot.id } as T;
           setData(docData);
@@ -44,6 +47,7 @@ export const useDoc = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
+        console.error(`[useDoc] onSnapshot error for path: ${stableRef.path}`, err);
          if (err.code === 'permission-denied') {
           const permissionError = new FirestorePermissionError({
             path: stableRef.path,
@@ -58,6 +62,7 @@ export const useDoc = <T extends DocumentData>(
     );
 
     return () => {
+        console.log(`[useDoc] Unsubscribing from snapshot listener for path: ${stableRef.path}`);
         unsubscribe();
     };
   }, [stableRef]); 

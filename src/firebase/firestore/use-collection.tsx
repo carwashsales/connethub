@@ -23,17 +23,20 @@ export const useCollection = <T extends DocumentData>(
 
   useEffect(() => {
     if (!stableQuery) {
+      console.log('[useCollection] Query is null. Clearing state.');
       setData(null);
       setLoading(false);
       setError(null);
       return;
     }
 
+    console.log(`[useCollection] New query for path: ${stableQuery.path}. Setting up snapshot listener.`);
     setLoading(true);
 
     const unsubscribe = onSnapshot(
       stableQuery,
       (snapshot: QuerySnapshot<T>) => {
+        console.log(`[useCollection] onSnapshot fired for path: ${stableQuery.path}. Doc count: ${snapshot.size}`);
         const docs = snapshot.docs.map(
           (doc) => ({ ...doc.data(), id: doc.id } as T)
         );
@@ -42,6 +45,7 @@ export const useCollection = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
+        console.error(`[useCollection] onSnapshot error for path: ${stableQuery.path}`, err);
         if (err.code === 'permission-denied') {
           const permissionError = new FirestorePermissionError({
             path: stableQuery.path,
@@ -56,6 +60,7 @@ export const useCollection = <T extends DocumentData>(
     );
 
     return () => {
+      console.log(`[useCollection] Unsubscribing from snapshot listener for path: ${stableQuery.path}`);
       unsubscribe();
     };
   }, [stableQuery]);
