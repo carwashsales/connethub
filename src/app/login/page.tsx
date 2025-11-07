@@ -20,38 +20,54 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    console.log('[LoginPage] handleEmailLogin started.');
+    if (!auth) {
+      console.error('[LoginPage] Auth service not available.');
+      return;
+    }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      console.log('[LoginPage] Attempting to sign in with email and password.');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('[LoginPage] Email login successful:', userCredential.user);
       // AuthWrapper will handle redirection.
       toast({ title: 'Success', description: 'Logged in successfully!' });
     } catch (error: any) {
+      console.error('[LoginPage] Email login failed:', error);
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
     } finally {
+      console.log('[LoginPage] handleEmailLogin finished.');
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    if (!auth) return;
+    console.log('[LoginPage] handleGoogleLogin started.');
+    if (!auth) {
+       console.error('[LoginPage] Auth service not available.');
+       return;
+    }
     setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      console.log('[LoginPage] Attempting to sign in with Google popup.');
+      const userCredential = await signInWithPopup(auth, provider);
+      console.log('[LoginPage] Google login successful:', userCredential.user);
       // AuthWrapper will handle redirection.
       toast({ title: 'Success', description: 'Logged in successfully!' });
     } catch (error: any) {
+      console.error('[LoginPage] Google login failed:', error);
       toast({
         title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
     } finally {
+       console.log('[LoginPage] handleGoogleLogin finished.');
       setLoading(false);
     }
   };
