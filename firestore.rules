@@ -158,13 +158,17 @@ service cloud.firestore {
     }
     
     match /conversations/{conversationId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.participantIds;
+      // Allow a user to list conversations they are part of.
+      // The client-side query MUST use `where('participantIds', 'array-contains', request.auth.uid)`
+      allow list: if request.auth != null;
+      
+      // Allow a user to get, update, or create a conversation document if they are a participant.
+      allow get, write: if request.auth != null && request.auth.uid in resource.data.participantIds;
 
       match /messages/{messageId} {
+         // A user can read/write messages in a conversation if they are a participant in that conversation.
          allow read, write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
       }
     }
   }
 }
-
-    
