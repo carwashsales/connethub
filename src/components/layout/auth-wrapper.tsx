@@ -2,12 +2,14 @@
 
 import { useUser, useFirestore, useAuth } from '@/firebase/index';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { AppLayout } from './app-layout';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '../ui/button';
+import { Card } from '../ui/card';
+import { AlertTriangle } from 'lucide-react';
 
 function FullPageLoader() {
   return (
@@ -30,79 +32,90 @@ function FullPageLoader() {
   );
 }
 
+function MissingProfileError() {
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (auth) {
+      await auth.signOut();
+      router.push('/login');
+    }
+  };
+
+  return (
+     <div className="flex h-screen w-screen items-center justify-center bg-background p-4">
+        <Card className="max-w-md p-6 sm:p-8 text-center">
+            <AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
+            <h1 className="mt-4 text-2xl font-headline font-bold">User Profile Not Found</h1>
+            <p className="mt-2 text-muted-foreground">
+                Your authentication is valid, but we could not find your user profile in the database.
+                This can sometimes happen if the profile creation process was interrupted.
+            </p>
+            <Button onClick={handleLogout} variant="destructive" className="mt-6">
+                Log Out and Try Again
+            </Button>
+        </Card>
+     </div>
+  );
+}
+
+
 const PUBLIC_PATHS = ['/login', '/signup'];
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user: authUser, loading: authLoading } = useUser();
-  const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
-  const { toast } = useToast();
-
   const isPublicPage = PUBLIC_PATHS.includes(pathname);
 
   const userDocRef = useMemo(() => {
     if (!db || !authUser) {
       return null;
     }
-    // ALWAYS fetch the profile of the currently authenticated user.
     return doc(db, 'users', authUser.uid);
   }, [db, authUser]);
 
   const { data: userProfile, isLoading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
-  useEffect(() => {
-    // While any loading is in progress, we don't make any routing decisions.
-    if (authLoading || (authUser && userProfileLoading)) {
-      return;
-    }
-
-    const isUserAuthenticated = !!authUser;
-    const isProfileLoaded = !!userProfile;
-
-    // Case 1: Not logged in and on a protected page -> redirect to login.
-    if (!isUserAuthenticated && !isPublicPage) {
-      router.push('/login');
-      return;
-    }
-
-    // Case 2: Logged in and on a public page -> redirect to home.
-    if (isUserAuthenticated && isPublicPage) {
-      router.push('/');
-      return;
-    }
-
-    // Case 3: FINAL CHECK - All loading is done. If user is authenticated but profile is still missing,
-    // this is an unrecoverable state. Sign them out.
-    if (isUserAuthenticated && !isProfileLoaded) {
-      toast({
-        title: 'User Profile Missing',
-        description: 'Your user profile was not found. Please log in again to create it.',
-        variant: 'destructive',
-      });
-      auth?.signOut();
-      router.push('/login');
-      return;
-    }
-
-  }, [authLoading, userProfileLoading, authUser, userProfile, isPublicPage, pathname, router, auth, toast]);
-
-  // Render a loader if we are still waiting for auth or the user's profile.
-  if (authLoading || (authUser && userProfileLoading)) {
+  // 1. While auth is loading, show a loader.
+  if (authLoading) {
     return <FullPageLoader />;
   }
 
-  // If user is authenticated and we have their profile, show the app.
+  // 2. If auth is done and there's no user...
+  if (!authUser) {
+    // ...and we are on a protected page, redirect to login.
+    if (!isPublicPage) {
+      router.push('/login');
+      return <FullPageLoader />; // Show loader during redirect
+    }
+    // ...and we are on a public page, show the page.
+    return <>{children}</>;
+  }
+
+  // 3. If we have an auth user but are still waiting for their profile...
+  if (authUser && userProfileLoading) {
+     return <FullPageLoader />;
+  }
+
+  // 4. If we have an auth user, profile loading is done, but the profile is missing...
+  if (authUser && !userProfile) {
+     return <MissingProfileError />;
+  }
+
+  // 5. If we have both an auth user and their profile...
   if (authUser && userProfile) {
+    // ...and they are on a public page, redirect them to the home page.
+    if (isPublicPage) {
+      router.push('/');
+      return <FullPageLoader />; // Show loader during redirect
+    }
+    // ...and they are on a protected page, show the app layout.
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
 
-  // If not authenticated and on a public page, show that page.
-  if (!authUser && isPublicPage) {
-    return <>{children}</>;
-  }
-  
-  // This loader acts as a fallback for any intermediate or redirecting states.
+  // Fallback state, should ideally not be reached.
   return <FullPageLoader />;
 }
