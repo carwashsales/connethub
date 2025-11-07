@@ -315,7 +315,7 @@
         }
       },
       {
-        "path": "/marketplace_listings/{listingId}",
+        "path": "/products/{productId}",
         "definition": {
           "entityName": "MarketplaceListing",
           "schema": {
@@ -324,14 +324,14 @@
           "description": "Marketplace listings.  The 'sellerId' field is used for ownership checks.",
           "params": [
             {
-              "name": "listingId",
+              "name": "productId",
               "description": "The unique identifier of the marketplace listing."
             }
           ]
         }
       },
       {
-        "path": "/lost_and_found_items/{itemId}",
+        "path": "/lostAndFoundItems/{itemId}",
         "definition": {
           "entityName": "LostAndFoundItem",
           "schema": {
@@ -411,6 +411,7 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization, where authorization-related data (e.g., members map) is copied into subcollections to avoid costly and insecure `get()` calls in security rules. Structural Segregation is used to maintain a homogeneous security posture within collections. Access Modeling employs standardized patterns like path-based ownership for private data and membership maps for collaborative data. Data Clarity is enhanced by explicit state modeling and predictable schemas.\n\nSpecifically:\n\n*   **User Profiles:** Stored in `/users/{userId}`. This is path-based ownership; only the authenticated user (`request.auth.uid == userId`) can access their profile data.\n*   **Marketplace Listings:** Stored in `/marketplace_listings/{listingId}`. Each listing contains a `sellerId` to track ownership. While not strictly path-based, security rules can easily enforce that only the seller can update or delete their listings. Public listings are QAP compliant. Consider subcollections under user profiles if listings need to be scoped by user, or if stricter ownership constraints are needed.\n*   **Lost and Found Items:** Similar to Marketplace Listings, stored in `/lost_and_found_items/{itemId}` with a `userId` field.  Security rules enforce that only the user who posted the item can modify it.\n*   **Messages:** Stored in `/messages/{messageId}`.  Each message contains `senderId` and `receiverId`.  Security rules will allow read access only to either the sender or receiver.\n*   **Posts:** Stored in `/posts/{postId}`.  Each post contains a `userId` to identify the author.  Security rules allow read access to anyone, but write access is restricted to the author.\n*   **Content Moderation Flags:** Stored in `/content_moderation_flags/{flagId}`. These are system-generated and should only be writeable by a trusted server environment. Security rules should restrict access to these documents.\n*   **Ad Banners:** Stored in `/ad_banners/{bannerId}`. These are system-managed and should only be writeable by a trusted server environment. Security rules should restrict access to these documents."
+    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). Authorization Independence is achieved through denormalization, where authorization-related data (e.g., members map) is copied into subcollections to avoid costly and insecure `get()` calls in security rules. Structural Segregation is used to maintain a homogeneous security posture within collections. Access Modeling employs standardized patterns like path-based ownership for private data and membership maps for collaborative data. Data Clarity is enhanced by explicit state modeling and predictable schemas.\n\nSpecifically:\n\n*   **User Profiles:** Stored in `/users/{userId}`. This is path-based ownership; only the authenticated user (`request.auth.uid == userId`) can access their profile data.\n*   **Marketplace Listings:** Stored in `/products/{productId}`. Each listing contains a `sellerId` to track ownership. While not strictly path-based, security rules can easily enforce that only the seller can update or delete their listings. Public listings are QAP compliant. Consider subcollections under user profiles if listings need to be scoped by user, or if stricter ownership constraints are needed.\n*   **Lost and Found Items:** Similar to Marketplace Listings, stored in `/lostAndFoundItems/{itemId}` with a `userId` field.  Security rules enforce that only the user who posted the item can modify it.\n*   **Messages:** Stored in `/messages/{messageId}`.  Each message contains `senderId` and `receiverId`.  Security rules will allow read access only to either the sender or receiver.\n*   **Posts:** Stored in `/posts/{postId}`.  Each post contains a `userId` to identify the author.  Security rules allow read access to anyone, but write access is restricted to the author.\n*   **Content Moderation Flags:** Stored in `/content_moderation_flags/{flagId}`. These are system-generated and should only be writeable by a trusted server environment. Security rules should restrict access to these documents.\n*   **Ad Banners:** Stored in `/ad_banners/{bannerId}`. These are system-managed and should only be writeable by a trusted server environment. Security rules should restrict access to these documents."
   }
 }
+    
