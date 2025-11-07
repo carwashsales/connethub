@@ -36,7 +36,6 @@ function PostSkeleton() {
 }
 
 export function NewsFeed() {
-  console.log("NewsFeed: Rendering...");
   const { user: authUser } = useUser();
   const db = useFirestore();
 
@@ -53,8 +52,6 @@ export function NewsFeed() {
   }, [db]);
 
   const { data: posts, loading: loadingPosts } = useCollection<Post>(postsQuery);
-
-  console.log("NewsFeed state:", { loadingPosts, hasPosts: !!posts, currentUser: !!currentUser });
 
   return (
     <div className="space-y-8">

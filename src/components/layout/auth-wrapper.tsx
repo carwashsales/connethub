@@ -62,7 +62,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   }, [authLoading, authUser, isPublicPage, pathname, router]);
 
 
-  if (authLoading || (authUser && userProfileLoading && !isPublicPage)) {
+  if (authLoading || (authUser && !isPublicPage && userProfileLoading)) {
       return <FullPageLoader />;
   }
 
@@ -77,8 +77,10 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
   
-  // This handles the case where the user is authenticated but the profile is still loading
-  // or if the profile doesn't exist (e.g. creation failed).
+  if(authUser && !userProfileLoading && !userProfile) {
+     return <AppLayout user={null}>{children}</AppLayout>
+  }
+  
   if (authUser && !isPublicPage) {
     return <FullPageLoader />;
   }
