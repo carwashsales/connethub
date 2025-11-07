@@ -6,7 +6,7 @@
  *
  * Data Structure:
  * - /users/{userId}: User profiles, publicly readable but editable only by the owner.
- * - /marketplace_listings/{listingId}: Marketplace listings, editable only by the seller.
+ * - /products/{productId}: Marketplace listings, editable only by the seller.
  * - /lost_and_found_items/{itemId}: Lost and found items, editable only by the user who posted the item.
  * - /messages/{messageId}: Messages, accessible to sender and receiver.
  * - /posts/{postId}: Posts, publicly readable but editable only by the author.
@@ -52,7 +52,7 @@ service cloud.firestore {
 
     /**
      * @description Manages marketplace listings, allowing anyone to read listings, but only the seller to modify them.
-     * @path /marketplace_listings/{listingId}
+     * @path /products/{productId}
      * @allow (get) Any user can read a marketplace listing.
      * @allow (list) Any user can list marketplace listings.
      * @allow (create) User with UID 'user123' creates a listing with sellerId 'user123'.
@@ -63,7 +63,7 @@ service cloud.firestore {
      * @deny (delete) User with UID 'user456' attempts to delete a listing where sellerId is 'user123'.
      * @principle Enforces document ownership for writes to marketplace listings.
      */
-    match /marketplace_listings/{listingId} {
+    match /products/{productId} {
       allow get: if true;
       allow list: if true;
       allow create: if request.auth.uid == request.resource.data.sellerId;
