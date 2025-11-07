@@ -21,11 +21,11 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const createUserProfile = (user: User, displayName?: string | null): Promise<void> => {
+  const createUserProfile = async (user: User, displayName?: string | null): Promise<void> => {
     console.log('[SignupPage] createUserProfile started for user:', user.uid);
     if (!db) {
       console.error('[SignupPage] Firestore is not initialized.');
-      return Promise.reject(new Error("Firestore is not initialized."));
+      throw new Error("Firestore is not initialized.");
     }
 
     const userRef = doc(db, 'users', user.uid);
@@ -41,7 +41,8 @@ export default function SignupPage() {
     };
     
     console.log('[SignupPage] Profile data to be saved:', newUserProfile);
-    return setDoc(userRef, newUserProfile);
+    // Use setDoc with merge: true to avoid errors if the document already exists (e.g., re-signing up with Google)
+    return setDoc(userRef, newUserProfile, { merge: true });
   };
 
   const handleEmailSignup = async (e: React.FormEvent) => {

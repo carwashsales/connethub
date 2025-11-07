@@ -1,12 +1,13 @@
 'use client';
 
-import { useUser, useFirestore } from '@/firebase/index';
+import { useUser, useFirestore, useAuth } from '@/firebase/index';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 import { AppLayout } from './app-layout';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 function FullPageLoader() {
   return (
@@ -33,9 +34,11 @@ const PUBLIC_PATHS = ['/login', '/signup'];
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user: authUser, loading: authLoading } = useUser();
+  const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   console.log(`[AuthWrapper] Render. Path: ${pathname}. Auth loading: ${authLoading}. Auth user:`, !!authUser);
 
@@ -55,51 +58,50 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   console.log(`[AuthWrapper] userProfile state:`, { userProfile: !!userProfile, userProfileLoading });
 
   useEffect(() => {
-    console.log('[AuthWrapper useEffect] Running checks...', { authLoading, authUser, isPublicPage, pathname });
-    // If still loading auth state, don't do anything yet.
+    console.log('[AuthWrapper useEffect] Running checks...', { authLoading, authUser, userProfile: !!userProfile, userProfileLoading, isPublicPage, pathname });
     if (authLoading) {
       console.log('[AuthWrapper useEffect] Auth is loading. No action.');
       return;
     }
 
-    // If there's no authenticated user and the page is not public, redirect to login.
     if (!authUser && !isPublicPage) {
       console.log('[AuthWrapper useEffect] No auth user on private page. Redirecting to /login.');
       router.push('/login');
-    }
-    // If there is an authenticated user and they are on a public page (like login/signup), redirect to home.
-    else if (authUser && isPublicPage) {
+    } else if (authUser && isPublicPage) {
       console.log('[AuthWrapper useEffect] Auth user on public page. Redirecting to /.');
       router.push('/');
+    } else if (authUser && !userProfile && !userProfileLoading) {
+      // This is the new crucial check.
+      // If the user is authenticated but their profile doesn't exist and we are done loading,
+      // it means their user record is incomplete. We should sign them out and ask them to log in again.
+      console.error('[AuthWrapper useEffect] CRITICAL: User is authenticated but profile document does not exist. Signing out.');
+      toast({
+        title: 'User Profile Missing',
+        description: 'Your user profile was not found. Please log in again to create it.',
+        variant: 'destructive'
+      });
+      auth?.signOut();
+      router.push('/login');
     } else {
       console.log('[AuthWrapper useEffect] No redirection needed.');
     }
-  }, [authLoading, authUser, isPublicPage, pathname, router]);
+  }, [authLoading, authUser, userProfile, userProfileLoading, isPublicPage, pathname, router, auth, toast]);
 
-  // While checking auth state, show a loader.
-  if (authLoading) {
-    console.log('[AuthWrapper] Render: auth is loading, showing FullPageLoader.');
+  if (authLoading || (authUser && userProfileLoading)) {
+    console.log('[AuthWrapper] Render: Main loading check passed. Showing FullPageLoader.');
     return <FullPageLoader />;
   }
 
-  // If the user is authenticated and we are on a private page,
-  // we need to wait for their profile to load before rendering the layout.
-  if (authUser && !isPublicPage) {
-    if (userProfileLoading) {
-        console.log('[AuthWrapper] Render: authUser exists, but user profile is loading. Showing FullPageLoader.');
-        return <FullPageLoader />;
-    }
+  if (authUser && userProfile) {
     console.log('[AuthWrapper] Render: authUser and userProfile exist. Rendering AppLayout.');
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
 
-  // If the user is not authenticated and we are on a public page, show the page content.
   if (!authUser && isPublicPage) {
     console.log('[AuthWrapper] Render: No auth user on public page. Rendering children.');
     return <>{children}</>;
   }
   
-  // This is a fallback loader for edge cases, like when redirecting.
   console.log('[AuthWrapper] Render: Fallback, showing FullPageLoader.');
   return <FullPageLoader />;
 }
