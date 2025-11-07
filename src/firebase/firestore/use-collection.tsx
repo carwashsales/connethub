@@ -61,13 +61,17 @@ export function useCollection<T = any>(
   const memoizedTargetRefOrQuery = useMemoDeep(targetRefOrQuery);
 
   useEffect(() => {
+    const queryPath = memoizedTargetRefOrQuery ? (memoizedTargetRefOrQuery as any).path || (memoizedTargetRefOrQuery as any)._query?.path?.canonicalString() : 'null';
+
     if (!memoizedTargetRefOrQuery) {
+      console.log('[useCollection] No query provided. Setting state to initial.');
       setData(null);
-      setIsLoading(false);
+      setIsLoading(false); // If no query, not loading
       setError(null);
       return;
     }
-
+    
+    console.log(`[useCollection] useEffect running for path: ${queryPath}`);
     // Reset state when query changes
     setIsLoading(true);
     setError(null);
@@ -76,6 +80,7 @@ export function useCollection<T = any>(
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
+        console.log(`[useCollection] onSnapshot fired for path: ${queryPath}. Doc count: ${snapshot.size}`);
         const results: ResultItemType[] = [];
         for (const doc of snapshot.docs) {
           results.push({ ...(doc.data() as T), id: doc.id });
@@ -90,6 +95,7 @@ export function useCollection<T = any>(
             ? (memoizedTargetRefOrQuery as CollectionReference).path
             : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
 
+        console.error(`[useCollection] onSnapshot ERROR for path: ${path}`, error);
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
@@ -103,8 +109,13 @@ export function useCollection<T = any>(
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      console.log(`[useCollection] Unsubscribing from snapshot listener for path: ${queryPath}`);
+      unsubscribe();
+    }
   }, [memoizedTargetRefOrQuery]);
 
+  const queryPath = targetRefOrQuery ? (targetRefOrQuery as any).path || (targetRefOrQuery as any)._query?.path?.canonicalString() : 'null';
+  console.log(`[useCollection] Render for path: ${queryPath}. Loading: ${isLoading}`);
   return { data, isLoading: isLoading, error };
 }

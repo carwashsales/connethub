@@ -47,12 +47,14 @@ export function useDoc<T = any>(
 
   useEffect(() => {
     if (!memoizedDocRef) {
+      console.log('[useDoc] No docRef provided. Setting state to initial.');
       setData(null);
-      setIsLoading(false);
+      setIsLoading(false); // If no ref, we aren't loading anything.
       setError(null);
       return;
     }
 
+    console.log(`[useDoc] useEffect running for path: ${memoizedDocRef.path}`);
     setIsLoading(true);
     setError(null);
     setData(null);
@@ -60,6 +62,7 @@ export function useDoc<T = any>(
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
+        console.log(`[useDoc] onSnapshot fired for path: ${memoizedDocRef.path}. Exists: ${snapshot.exists()}`);
         if (snapshot.exists()) {
           setData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
@@ -69,6 +72,7 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (error: FirestoreError) => {
+        console.error(`[useDoc] onSnapshot ERROR for path: ${memoizedDocRef.path}`, error);
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
@@ -82,8 +86,12 @@ export function useDoc<T = any>(
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      console.log(`[useDoc] Unsubscribing from snapshot listener for path: ${memoizedDocRef.path}`);
+      unsubscribe();
+    }
   }, [memoizedDocRef]);
 
+  console.log(`[useDoc] Render for path: ${docRef?.path}. Loading: ${isLoading}`);
   return { data, isLoading: isLoading, error };
 }
