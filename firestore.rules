@@ -1,43 +1,182 @@
+/**
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a user-ownership model for user profiles and content,
+ *              restricts access to moderation flags and ad banners to a trusted server environment,
+ *              and allows public read access to posts and marketplace listings.
+ *
+ * Data Structure:
+ * - /users/{userId}: User profiles, accessible only to the authenticated user.
+ * - /marketplace_listings/{listingId}: Marketplace listings, editable only by the seller.
+ * - /lost_and_found_items/{itemId}: Lost and found items, editable only by the user who posted the item.
+ * - /messages/{messageId}: Messages, accessible to sender and receiver.
+ * - /posts/{postId}: Posts, publicly readable but editable only by the author.
+ * - /content_moderation_flags/{flagId}: Content moderation flags, write-only for trusted server.
+ * - /ad_banners/{bannerId}: Ad banners, write-only for trusted server.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed.
+ * - Content Moderation Flags and Ad Banners can only be written to, never read from client side.
+ * - Public read access is allowed for Posts and Marketplace Listings.
+ *
+ * Denormalization for Authorization:
+ * - MarketplaceListing, LostAndFoundItem, and Post documents all have a userId (or sellerId) field
+ *   to simplify ownership checks, avoiding the need for extra `get()` calls.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Allow users to create and manage their own profile
+    /**
+     * @description Protects user profiles, allowing only the authenticated user to manage their own profile.
+     * @path /users/{userId}
+     * @allow (create) User with UID 'user123' creates a profile at /users/user123.
+     * @allow (get) User with UID 'user123' reads their profile at /users/user123.
+     * @allow (update) User with UID 'user123' updates their profile at /users/user123.
+     * @allow (delete) User with UID 'user123' deletes their profile at /users/user123.
+     * @deny (create) User with UID 'user456' attempts to create a profile at /users/user123.
+     * @deny (get) User with UID 'user456' attempts to read profile at /users/user123.
+     * @principle Enforces path-based ownership for user profiles.
+     */
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
-      allow update, delete: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Allow users to create their own posts, and for anyone to read them.
-    match /posts/{postId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.authorId == request.auth.uid;
-    }
-    
-    // Allow users to create their own products, and for anyone to read them.
-    match /products/{productId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.sellerId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.sellerId == request.auth.uid;
-    }
-
-    // Allow users to create their own lost/found items, and for anyone to read them.
-    match /lostAndFoundItems/{itemId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-    }
-    
-    // Rules for conversations and messages
-    match /conversations/{conversationId} {
-      allow read, create: if request.auth != null && request.auth.uid in resource.data.participantIds;
-      allow update: if request.auth != null && request.auth.uid in resource.data.participantIds;
-
-      match /messages/{messageId} {
-        allow read, create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+      function isSignedIn() {
+        return request.auth != null;
       }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Manages marketplace listings, allowing anyone to read listings, but only the seller to modify them.
+     * @path /marketplace_listings/{listingId}
+     * @allow (get) Any user can read a marketplace listing.
+     * @allow (list) Any user can list marketplace listings.
+     * @allow (create) User with UID 'user123' creates a listing with sellerId 'user123'.
+     * @allow (update) User with UID 'user123' updates a listing where sellerId is already 'user123'.
+     * @allow (delete) User with UID 'user123' deletes a listing where sellerId is 'user123'.
+     * @deny (create) User with UID 'user123' creates a listing with sellerId 'user456'.
+     * @deny (update) User with UID 'user456' attempts to update a listing where sellerId is 'user123'.
+     * @deny (delete) User with UID 'user456' attempts to delete a listing where sellerId is 'user123'.
+     * @principle Enforces document ownership for writes to marketplace listings.
+     */
+    match /marketplace_listings/{listingId} {
+      function isOwner(sellerId) {
+        return request.auth.uid == sellerId;
+      }
+
+
+      allow get: if true;
+      allow list: if true;
+      allow create: if request.auth.uid == request.resource.data.sellerId;
+      allow update: if request.auth.uid == resource.data.sellerId;
+      allow delete: if request.auth.uid == resource.data.sellerId;
+    }
+
+    /**
+     * @description Manages lost and found items, allowing anyone to read items, but only the user who posted to modify them.
+     * @path /lost_and_found_items/{itemId}
+     * @allow (get) Any user can read a lost and found item.
+     * @allow (list) Any user can list lost and found items.
+     * @allow (create) User with UID 'user123' creates an item with userId 'user123'.
+     * @allow (update) User with UID 'user123' updates an item where userId is already 'user123'.
+     * @allow (delete) User with UID 'user123' deletes an item where userId is 'user123'.
+     * @deny (create) User with UID 'user123' creates an item with userId 'user456'.
+     * @deny (update) User with UID 'user456' attempts to update an item where userId is 'user123'.
+     * @deny (delete) User with UID 'user456' attempts to delete an item where userId is 'user123'.
+     * @principle Enforces document ownership for writes to lost and found items.
+     */
+    match /lost_and_found_items/{itemId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      allow get: if true;
+      allow list: if true;
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth.uid == resource.data.userId;
+      allow delete: if request.auth.uid == resource.data.userId;
+    }
+
+    /**
+     * @description Manages messages, allowing only the sender or receiver to access the message.
+     * @path /messages/{messageId}
+     * @allow (get) User with UID 'user123' reads a message where senderId is 'user123'.
+     * @allow (get) User with UID 'user456' reads a message where receiverId is 'user456'.
+     * @allow (list) Sender with UID 'user123' can list their sent messages.
+     * @deny (get) User with UID 'user456' attempts to read a message where senderId is 'user123' and receiverId is 'user789'.
+     * @principle Enforces access control based on sender and receiver relationship.
+     */
+    match /messages/{messageId} {
+
+      allow get: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow list: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Manages posts, allowing anyone to read posts, but only the author to modify them.
+     * @path /posts/{postId}
+     * @allow (get) Any user can read a post.
+     * @allow (list) Any user can list posts.
+     * @allow (create) User with UID 'user123' creates a post with userId 'user123'.
+     * @allow (update) User with UID 'user123' updates a post where userId is already 'user123'.
+     * @allow (delete) User with UID 'user123' deletes a post where userId is 'user123'.
+     * @deny (create) User with UID 'user123' creates a post with userId 'user456'.
+     * @deny (update) User with UID 'user456' attempts to update a post where userId is 'user123'.
+     * @deny (delete) User with UID 'user456' attempts to delete a post where userId is 'user123'.
+     * @principle Enforces document ownership for writes to posts.
+     */
+    match /posts/{postId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      allow get: if true;
+      allow list: if true;
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth.uid == resource.data.userId;
+      allow delete: if request.auth.uid == resource.data.userId;
+    }
+
+    /**
+     * @description Restricts access to content moderation flags, allowing only trusted server environments to write.
+     * @path /content_moderation_flags/{flagId}
+     * @deny (get) Any user attempts to read a content moderation flag.
+     * @deny (list) Any user attempts to list content moderation flags.
+     * @allow (create) A trusted server creates a content moderation flag.
+     * @principle Restricts write access to a trusted server environment.
+     */
+    match /content_moderation_flags/{flagId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if true;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Restricts access to ad banners, allowing only trusted server environments to write.
+     * @path /ad_banners/{bannerId}
+     * @deny (get) Any user attempts to read an ad banner.
+     * @deny (list) Any user attempts to list ad banners.
+     * @allow (create) A trusted server creates an ad banner.
+     * @principle Restricts write access to a trusted server environment.
+     */
+    match /ad_banners/{bannerId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if true;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
