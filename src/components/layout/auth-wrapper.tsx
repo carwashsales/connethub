@@ -74,7 +74,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       // This is the new crucial check.
       // If the user is authenticated but their profile doesn't exist and we are done loading,
       // it means their user record is incomplete. We should sign them out and ask them to log in again.
-      console.error('[AuthWrapper useEffect] CRITICAL: User is authenticated but profile document does not exist. Signing out.');
+      console.log('[AuthWrapper useEffect] CRITICAL: User is authenticated but profile document does not exist. Signing out.');
       toast({
         title: 'User Profile Missing',
         description: 'Your user profile was not found. Please log in again to create it.',
