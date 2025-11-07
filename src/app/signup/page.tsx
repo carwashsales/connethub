@@ -11,8 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, setDoc } from 'firebase/firestore';
 import { Chrome } from 'lucide-react';
 import Link from 'next/link';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function SignupPage() {
   const auth = useAuth();
@@ -23,8 +21,9 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const createUserProfile = (user: User, displayName?: string | null) => {
-    if (!db) return Promise.resolve();
+  // This function now returns the promise from setDoc
+  const createUserProfile = (user: User, displayName?: string | null): Promise<void> => {
+    if (!db) return Promise.reject(new Error("Firestore is not initialized."));
 
     const userRef = doc(db, 'users', user.uid);
     const newUserProfile = {
@@ -38,18 +37,8 @@ export default function SignupPage() {
       bio: '',
     };
     
-    // Do not await here, chain the .catch()
-    return setDoc(userRef, newUserProfile)
-      .catch(serverError => {
-        const permissionError = new FirestorePermissionError({
-          path: userRef.path,
-          operation: 'create',
-          requestResourceData: newUserProfile,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        // Also throw to stop the promise chain and prevent redirection
-        throw permissionError;
-      });
+    // The setDoc promise is returned, to be awaited by the caller
+    return setDoc(userRef, newUserProfile);
   };
 
   const handleEmailSignup = async (e: React.FormEvent) => {
@@ -58,17 +47,18 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // We now await the profile creation. If it fails, the catch block will handle it.
       await createUserProfile(userCredential.user, name);
-      // AuthWrapper will handle redirection.
+      
+      // Success toast is only shown if both auth and profile creation succeed.
       toast({ title: 'Success', description: 'Account created successfully!' });
+      // AuthWrapper will handle redirection.
     } catch (error: any) {
-      if (!(error instanceof FirestorePermissionError)) {
-          toast({
-            title: 'Error',
-            description: error.message,
-            variant: 'destructive',
-          });
-      }
+      toast({
+        title: 'Error creating account',
+        description: error.message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -80,17 +70,17 @@ export default function SignupPage() {
     const provider = new GoogleAuthProvider();
     try {
       const userCredential = await signInWithPopup(auth, provider);
+      // We now await the profile creation.
       await createUserProfile(userCredential.user);
-      // AuthWrapper will handle redirection.
+      
       toast({ title: 'Success', description: 'Account created successfully!' });
+       // AuthWrapper will handle redirection.
     } catch (error: any) {
-       if (!(error instanceof FirestorePermissionError)) {
-          toast({
-            title: 'Error',
-            description: error.message,
-            variant: 'destructive',
-          });
-      }
+        toast({
+          title: 'Error creating account',
+          description: error.message,
+          variant: 'destructive',
+        });
     } finally {
       setLoading(false);
     }
