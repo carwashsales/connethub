@@ -30,7 +30,6 @@ function MarketplaceSkeleton() {
 
 
 export default function MarketplacePage() {
-  console.log("MarketplacePage: Rendering...");
   const db = useFirestore();
   const productsQuery = useMemo(() => {
     if (!db) return null;
@@ -41,8 +40,6 @@ export default function MarketplacePage() {
   const { user } = useUser();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
-
-  console.log("MarketplacePage state:", { loading, hasItems: !!allMarketplaceItems });
 
   const marketplaceItems = useMemo(() => {
     if (!allMarketplaceItems) return [];

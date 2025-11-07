@@ -21,20 +21,17 @@ export const useCollection = <T extends DocumentData>(
 
   useEffect(() => {
     if (!stableQuery) {
-      console.log('useCollection: Query is null, resetting state.');
       setData(null);
       setLoading(false);
       setError(null);
       return;
     }
 
-    console.log(`useCollection: Subscribing to snapshot for path: ${(stableQuery as any)._query.path.segments.join('/')}`);
     setLoading(true);
 
     const unsubscribe = onSnapshot(
       stableQuery,
       (snapshot: QuerySnapshot<T>) => {
-        console.log(`useCollection: Snapshot received with ${snapshot.docs.length} documents.`);
         const docs = snapshot.docs.map(
           (doc) => ({ ...doc.data(), id: doc.id } as T)
         );
@@ -43,7 +40,6 @@ export const useCollection = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
-        console.error("useCollection: Error fetching collection:", err);
         setError(err);
         setLoading(false);
         setData(null);
@@ -51,7 +47,6 @@ export const useCollection = <T extends DocumentData>(
     );
 
     return () => {
-      console.log(`useCollection: Unsubscribing from snapshot for path: ${(stableQuery as any)._query.path.segments.join('/')}`);
       unsubscribe();
     };
   }, [stableQuery]);
