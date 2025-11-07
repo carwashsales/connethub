@@ -22,7 +22,7 @@ export type WithId<T> = T & { id: string };
  */
 export interface UseCollectionResult<T> {
   data: WithId<T>[] | null; // Document data with ID, or null.
-  isLoading: boolean;       // True if loading.
+  loading: boolean;       // True if loading.
   error: FirestoreError | Error | null; // Error object, or null.
 }
 
@@ -54,7 +54,7 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   // Deeply memoize the query to prevent re-running the effect on re-renders
@@ -63,13 +63,13 @@ export function useCollection<T = any>(
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
       setData(null);
-      setIsLoading(false); // If no query, not loading
+      setLoading(false); // If no query, not loading
       setError(null);
       return;
     }
     
     // Reset state when query changes
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
     setData(null);
 
@@ -82,7 +82,7 @@ export function useCollection<T = any>(
         }
         setData(results);
         setError(null);
-        setIsLoading(false);
+        setLoading(false);
       },
       (error: FirestoreError) => {
         const path: string =
@@ -97,7 +97,7 @@ export function useCollection<T = any>(
 
         setError(contextualError)
         setData(null)
-        setIsLoading(false)
+        setLoading(false)
 
         errorEmitter.emit('permission-error', contextualError);
       }
@@ -108,5 +108,5 @@ export function useCollection<T = any>(
     }
   }, [memoizedTargetRefOrQuery]);
 
-  return { data, isLoading: isLoading, error };
+  return { data, loading: loading, error };
 }
