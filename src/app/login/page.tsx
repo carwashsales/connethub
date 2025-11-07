@@ -26,11 +26,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // AuthWrapper will handle redirection.
       toast({ title: 'Success', description: 'Logged in successfully!' });
     } catch (error: any) {
-      console.error('[LoginPage] Email login failed:', error);
-      // Provide a user-friendly error message
       toast({
         title: 'Login Failed',
         description: 'Invalid email or password. Please try again.',
@@ -49,11 +46,8 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // AuthWrapper will handle redirection.
       toast({ title: 'Success', description: 'Logged in successfully!' });
     } catch (error: any) {
-      console.error('[LoginPage] Google login failed:', error);
-      // Provide a user-friendly error message
       toast({
         title: 'Login Failed',
         description: 'Could not sign in with Google. Please try again.',

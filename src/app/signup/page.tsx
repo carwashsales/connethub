@@ -22,9 +22,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
 
   const createUserProfile = async (user: User, displayName?: string | null): Promise<void> => {
-    console.log('[SignupPage] createUserProfile started for user:', user.uid);
     if (!db) {
-      console.error('[SignupPage] Firestore is not initialized.');
       throw new Error("Firestore is not initialized.");
     }
 
@@ -40,71 +38,49 @@ export default function SignupPage() {
       bio: '',
     };
     
-    console.log('[SignupPage] Profile data to be saved:', newUserProfile);
-    // Use setDoc with merge: true to avoid errors if the document already exists (e.g., re-signing up with Google)
-    return setDoc(userRef, newUserProfile, { merge: true });
+    // Use setDoc with merge: true to create or update the document without overwriting.
+    // This is safer for re-authentication flows (e.g. signing up with Google again).
+    await setDoc(userRef, newUserProfile, { merge: true });
   };
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[SignupPage] handleEmailSignup started.');
     if (!auth) {
-      console.error('[SignupPage] Auth service not available.');
       return;
     }
     setLoading(true);
     try {
-      console.log('[SignupPage] Attempting to create user with email and password.');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('[SignupPage] Auth user created successfully:', userCredential.user);
-      
-      console.log('[SignupPage] Attempting to create user profile in Firestore.');
       await createUserProfile(userCredential.user, name);
-      console.log('[SignupPage] Firestore user profile created successfully.');
-      
       toast({ title: 'Success', description: 'Account created successfully!' });
-      console.log('[SignupPage] Signup process complete. Redirect will be handled by AuthWrapper.');
     } catch (error: any) {
-      console.error('[SignupPage] Error during email signup:', error);
       toast({
         title: 'Error creating account',
         description: error.message,
         variant: 'destructive',
       });
     } finally {
-      console.log('[SignupPage] handleEmailSignup finished.');
       setLoading(false);
     }
   };
 
   const handleGoogleSignup = async () => {
-    console.log('[SignupPage] handleGoogleSignup started.');
     if (!auth) {
-      console.error('[SignupPage] Auth service not available.');
       return
     };
     setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      console.log('[SignupPage] Attempting to sign in with Google popup.');
       const userCredential = await signInWithPopup(auth, provider);
-      console.log('[SignupPage] Google auth successful:', userCredential.user);
-      
-      console.log('[SignupPage] Attempting to create user profile in Firestore.');
       await createUserProfile(userCredential.user);
-      console.log('[SignupPage] Firestore user profile created successfully.');
-      
       toast({ title: 'Success', description: 'Account created successfully!' });
-      console.log('[SignupPage] Signup process complete. Redirect will be handled by AuthWrapper.');
     } catch (error: any) {
-        console.error('[SignupPage] Error during Google signup:', error);
         toast({
           title: 'Error creating account',
           description: error.message,
           variant: 'destructive',
         });
     } finally {
-      console.log('[SignupPage] handleGoogleSignup finished.');
       setLoading(false);
     }
   };

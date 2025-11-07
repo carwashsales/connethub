@@ -40,38 +40,27 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { toast } = useToast();
 
-  console.log(`[AuthWrapper] Render. Path: ${pathname}. Auth loading: ${authLoading}. Auth user:`, !!authUser);
-
   const isPublicPage = PUBLIC_PATHS.includes(pathname);
 
   const userDocRef = useMemo(() => {
     if (!db || !authUser) {
-      console.log('[AuthWrapper] No db or authUser, userDocRef is null.');
       return null;
     }
-    console.log(`[AuthWrapper] Creating doc ref for user: users/${authUser.uid}`);
     return doc(db, 'users', authUser.uid);
   }, [db, authUser]);
 
-  const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
-
-  console.log(`[AuthWrapper] userProfile state:`, { userProfile: !!userProfile, userProfileLoading });
+  const { data: userProfile, isLoading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    console.log('[AuthWrapper useEffect] Running checks...', { authLoading, authUser: !!authUser, userProfile: !!userProfile, userProfileLoading, isPublicPage, pathname });
     if (authLoading) {
-      console.log('[AuthWrapper useEffect] Auth is loading. No action.');
       return;
     }
 
     if (!authUser && !isPublicPage) {
-      console.log('[AuthWrapper useEffect] No auth user on private page. Redirecting to /login.');
       router.push('/login');
     } else if (authUser && isPublicPage) {
-      console.log('[AuthWrapper useEffect] Auth user on public page. Redirecting to /.');
       router.push('/');
     } else if (authUser && !userProfile && !userProfileLoading) {
-      console.log('[AuthWrapper useEffect] CRITICAL: User is authenticated but profile document does not exist. Signing out.');
       toast({
         title: 'User Profile Missing',
         description: 'Your user profile was not found. Please log in again to create it.',
@@ -79,26 +68,20 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       });
       auth?.signOut();
       router.push('/login');
-    } else {
-      console.log('[AuthWrapper useEffect] No redirection needed.');
     }
   }, [authLoading, authUser, userProfile, userProfileLoading, isPublicPage, pathname, router, auth, toast]);
 
   if (authLoading || (authUser && userProfileLoading)) {
-    console.log('[AuthWrapper] Render: Main loading check passed. Showing FullPageLoader.');
     return <FullPageLoader />;
   }
 
   if (authUser && userProfile) {
-    console.log('[AuthWrapper] Render: authUser and userProfile exist. Rendering AppLayout.');
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
 
   if (!authUser && isPublicPage) {
-    console.log('[AuthWrapper] Render: No auth user on public page. Rendering children.');
     return <>{children}</>;
   }
   
-  console.log('[AuthWrapper] Render: Fallback, showing FullPageLoader.');
   return <FullPageLoader />;
 }
