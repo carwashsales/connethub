@@ -62,7 +62,7 @@ export default function ProfilePage() {
         return doc(db, 'users', targetUserId);
     }, [db, targetUserId]);
 
-    const { data: user, loading: userLoading } = useDoc<UserProfile>(userDocRef);
+    const { data: user, isLoading: userLoading } = useDoc<UserProfile>(userDocRef);
     
     const coverImage = PlaceHolderImages.find(img => img.id === 'profile-cover');
 

@@ -46,42 +46,63 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     if (!db || !authUser) {
       return null;
     }
+    // ALWAYS fetch the profile of the currently authenticated user.
     return doc(db, 'users', authUser.uid);
   }, [db, authUser]);
 
   const { data: userProfile, isLoading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
-    if (authLoading) {
+    // Wait until both authentication and profile loading are settled.
+    if (authLoading || userProfileLoading) {
       return;
     }
 
-    if (!authUser && !isPublicPage) {
+    const isUserAuthenticated = !!authUser;
+    const isProfileLoaded = !!userProfile;
+
+    // Case 1: User is not logged in and trying to access a protected page.
+    if (!isUserAuthenticated && !isPublicPage) {
       router.push('/login');
-    } else if (authUser && isPublicPage) {
+      return;
+    }
+
+    // Case 2: User is logged in and trying to access a public page (login/signup).
+    if (isUserAuthenticated && isPublicPage) {
       router.push('/');
-    } else if (authUser && !userProfile && !userProfileLoading) {
+      return;
+    }
+
+    // Case 3: User is authenticated, but their profile document is missing.
+    // This is an inconsistent state. Sign them out and ask them to log in again.
+    if (isUserAuthenticated && !isProfileLoaded) {
       toast({
         title: 'User Profile Missing',
         description: 'Your user profile was not found. Please log in again to create it.',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       auth?.signOut();
       router.push('/login');
+      return;
     }
-  }, [authLoading, authUser, userProfile, userProfileLoading, isPublicPage, pathname, router, auth, toast]);
 
+  }, [authLoading, userProfileLoading, authUser, userProfile, isPublicPage, pathname, router, auth, toast]);
+
+  // Show a loader while we determine the user's status.
   if (authLoading || (authUser && userProfileLoading)) {
     return <FullPageLoader />;
   }
 
+  // If the user is logged in and their profile is loaded, show the app.
   if (authUser && userProfile) {
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
 
+  // If the user is not logged in and on a public page, show that page.
   if (!authUser && isPublicPage) {
     return <>{children}</>;
   }
   
+  // As a fallback, show the loader. This covers edge cases during redirection.
   return <FullPageLoader />;
 }

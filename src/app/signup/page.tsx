@@ -21,6 +21,8 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // This function creates or updates a user's profile in Firestore.
+  // Using { merge: true } makes this an "upsert" operation, which is safer.
   const createUserProfile = async (user: User, displayName?: string | null): Promise<void> => {
     if (!db) {
       throw new Error("Firestore is not initialized.");
@@ -40,7 +42,7 @@ export default function SignupPage() {
     
     // Use setDoc with merge: true to create or update the document without overwriting.
     // This is safer for re-authentication flows (e.g. signing up with Google again).
-    await setDoc(userRef, newUserProfile, { merge: true });
+    return setDoc(userRef, newUserProfile, { merge: true });
   };
 
   const handleEmailSignup = async (e: React.FormEvent) => {
@@ -51,6 +53,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Ensure profile is created before we consider the signup complete
       await createUserProfile(userCredential.user, name);
       toast({ title: 'Success', description: 'Account created successfully!' });
     } catch (error: any) {
@@ -72,6 +75,7 @@ export default function SignupPage() {
     const provider = new GoogleAuthProvider();
     try {
       const userCredential = await signInWithPopup(auth, provider);
+      // Ensure profile is created before we consider the signup complete
       await createUserProfile(userCredential.user);
       toast({ title: 'Success', description: 'Account created successfully!' });
     } catch (error: any) {
