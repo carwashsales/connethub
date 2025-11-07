@@ -9,6 +9,8 @@ import {
 } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useMemoDeep } from '@/hooks/use-memo-deep';
+import { errorEmitter } from '../error-emitter';
+import { FirestorePermissionError } from '../errors';
 
 export const useDoc = <T extends DocumentData>(
   ref: DocumentReference<T> | null
@@ -21,14 +23,14 @@ export const useDoc = <T extends DocumentData>(
 
   useEffect(() => {
     if (!stableRef) {
-      setLoading(false);
       setData(null);
+      setLoading(false);
       setError(null);
       return;
     }
 
     setLoading(true);
-
+    
     const unsubscribe = onSnapshot(
       stableRef,
       (snapshot: DocumentSnapshot<T>) => {
@@ -41,6 +43,13 @@ export const useDoc = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
+         if (err.code === 'permission-denied') {
+          const permissionError = new FirestorePermissionError({
+            path: stableRef.path,
+            operation: 'get',
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        }
         setError(err);
         setLoading(false);
         setData(null);

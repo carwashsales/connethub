@@ -7,7 +7,6 @@ import { AppLayout } from './app-layout';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 function FullPageLoader() {
   return (
@@ -50,40 +49,41 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { data: userProfile, loading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   useEffect(() => {
+    // If still loading auth state, don't do anything yet.
     if (authLoading) {
-      return; 
+      return;
     }
 
+    // If there's no authenticated user and the page is not public, redirect to login.
     if (!authUser && !isPublicPage) {
       router.push('/login');
-    } else if (authUser && isPublicPage) {
+    }
+    // If there is an authenticated user and they are on a public page (like login/signup), redirect to home.
+    else if (authUser && isPublicPage) {
       router.push('/');
     }
   }, [authLoading, authUser, isPublicPage, pathname, router]);
 
-
-  if (authLoading || (authUser && !isPublicPage && userProfileLoading)) {
-      return <FullPageLoader />;
-  }
-
-  if (isPublicPage) {
-      if(authUser) {
-          return <FullPageLoader />;
-      }
-      return <>{children}</>;
-  }
-  
-  if (authUser && userProfile) {
-    return <AppLayout user={userProfile}>{children}</AppLayout>;
-  }
-  
-  if(authUser && !userProfileLoading && !userProfile) {
-     return <AppLayout user={null}>{children}</AppLayout>
-  }
-  
-  if (authUser && !isPublicPage) {
+  // While checking auth state, show a loader.
+  if (authLoading) {
     return <FullPageLoader />;
   }
 
+  // If the user is authenticated and we are on a private page,
+  // we need to wait for their profile to load before rendering the layout.
+  if (authUser && !isPublicPage) {
+    if (userProfileLoading) {
+        return <FullPageLoader />;
+    }
+    // Once profile is loaded (or we know it doesn't exist), render the app.
+    return <AppLayout user={userProfile}>{children}</AppLayout>;
+  }
+
+  // If the user is not authenticated and we are on a public page, show the page content.
+  if (!authUser && isPublicPage) {
+    return <>{children}</>;
+  }
+  
+  // This is a fallback loader for edge cases, like when redirecting.
   return <FullPageLoader />;
 }

@@ -7,8 +7,10 @@ import {
   FirestoreError,
   QuerySnapshot,
 } from 'firebase/firestore';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useMemoDeep } from '@/hooks/use-memo-deep';
+import { errorEmitter } from '../error-emitter';
+import { FirestorePermissionError } from '../errors';
 
 export const useCollection = <T extends DocumentData>(
   q: Query<T> | null
@@ -40,6 +42,13 @@ export const useCollection = <T extends DocumentData>(
         setError(null);
       },
       (err: FirestoreError) => {
+        if (err.code === 'permission-denied') {
+          const permissionError = new FirestorePermissionError({
+            path: stableQuery.path,
+            operation: 'list',
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        }
         setError(err);
         setLoading(false);
         setData(null);

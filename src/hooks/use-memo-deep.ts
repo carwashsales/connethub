@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 
 // Custom deep equality checker
 function isEqual(a: any, b: any): boolean {
@@ -7,6 +7,11 @@ function isEqual(a: any, b: any): boolean {
   if (a && b && typeof a === 'object' && typeof b === 'object') {
     if (a.constructor !== b.constructor) return false;
 
+    // Firestore query/reference specific checks
+    if (typeof a.isEqual === 'function') {
+      return a.isEqual(b);
+    }
+    
     let length: number;
     let i: number;
 
