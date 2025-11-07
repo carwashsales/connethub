@@ -7,7 +7,7 @@
  * Data Structure:
  * - /users/{userId}: User profiles, publicly readable but editable only by the owner.
  * - /products/{productId}: Marketplace listings, editable only by the seller.
- * - /lost_and_found_items/{itemId}: Lost and found items, editable only by the user who posted the item.
+ * - /lostAndFoundItems/{itemId}: Lost and found items, editable only by the user who posted the item.
  * - /messages/{messageId}: Messages, accessible to sender and receiver.
  * - /posts/{postId}: Posts, publicly readable but editable only by the author.
  * - /content_moderation_flags/{flagId}: Content moderation flags, write-only for trusted server.
@@ -73,7 +73,7 @@ service cloud.firestore {
 
     /**
      * @description Manages lost and found items, allowing anyone to read items, but only the user who posted to modify them.
-     * @path /lost_and_found_items/{itemId}
+     * @path /lostAndFoundItems/{itemId}
      * @allow (get) Any user can read a lost and found item.
      * @allow (list) Any user can list lost and found items.
      * @allow (create) User with UID 'user123' creates an item with userId 'user123'.
@@ -84,7 +84,7 @@ service cloud.firestore {
      * @deny (delete) User with UID 'user456' attempts to delete an item where userId is 'user123'.
      * @principle Enforces document ownership for writes to lost and found items.
      */
-    match /lost_and_found_items/{itemId} {
+    match /lostAndFoundItems/{itemId} {
       allow get: if true;
       allow list: if true;
       allow create: if request.auth.uid == request.resource.data.userId;
