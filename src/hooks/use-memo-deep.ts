@@ -1,3 +1,4 @@
+
 import { useRef } from 'react';
 
 // Custom deep equality checker
@@ -5,13 +6,13 @@ function isEqual(a: any, b: any): boolean {
   if (a === b) return true;
 
   if (a && b && typeof a === 'object' && typeof b === 'object') {
-    if (a.constructor !== b.constructor) return false;
-
-    // Firestore query/reference specific checks
-    if (typeof a.isEqual === 'function') {
-      return a.isEqual(b);
+    // This is the key change: Use the built-in isEqual for Firestore objects
+    if (typeof (a as any).isEqual === 'function') {
+      return (a as any).isEqual(b);
     }
     
+    if (a.constructor !== b.constructor) return false;
+
     let length: number;
     let i: number;
 
