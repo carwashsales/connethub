@@ -4,6 +4,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import * as SheetPrimitive from "@radix-ui/react-dialog"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -206,6 +207,10 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
+             <SheetPrimitive.Title className="sr-only">Sidebar Menu</SheetPrimitive.Title>
+            <SheetPrimitive.Description className="sr-only">
+              Navigation links and user actions.
+            </SheetPrimitive.Description>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
