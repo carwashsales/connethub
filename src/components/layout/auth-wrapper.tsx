@@ -1,8 +1,8 @@
 'use client';
 
-import { useUser, useFirestore, useAuth } from '@/firebase/index';
+import { useUser, useFirestore } from '@/firebase/index';
 import { usePathname, useRouter } from 'next/navigation';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { AppLayout } from './app-layout';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
@@ -33,14 +33,12 @@ function FullPageLoader() {
 }
 
 function MissingProfileError() {
-  const auth = useAuth();
   const router = useRouter();
 
-  const handleLogout = async () => {
-    if (auth) {
-      await auth.signOut();
-      router.push('/login');
-    }
+  const handleTryAgain = () => {
+    // This could be enhanced to try re-fetching or logging out/in.
+    // For now, a simple refresh or redirect is a common strategy.
+    router.push('/login');
   };
 
   return (
@@ -49,11 +47,10 @@ function MissingProfileError() {
             <AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
             <h1 className="mt-4 text-2xl font-headline font-bold">User Profile Not Found</h1>
             <p className="mt-2 text-muted-foreground">
-                Your authentication is valid, but we could not find your user profile in the database.
-                This can sometimes happen if the profile creation process was interrupted.
+                We could not find a user profile associated with your account. This may be a temporary issue. Please try logging in again.
             </p>
-            <Button onClick={handleLogout} variant="destructive" className="mt-6">
-                Log Out and Try Again
+            <Button onClick={handleTryAgain} variant="destructive" className="mt-6">
+                Return to Login
             </Button>
         </Card>
      </div>
@@ -79,40 +76,52 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   const { data: userProfile, isLoading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
+  useEffect(() => {
+    // This effect handles redirects safely after rendering.
+    if (authLoading || userProfileLoading) {
+      return; // Do nothing while we are still loading information.
+    }
+    
+    if (!authUser && !isPublicPage) {
+      // If not logged in and on a protected page, redirect to login.
+      router.push('/login');
+    }
+
+    if (authUser && userProfile && isPublicPage) {
+      // If logged in and on a public page, redirect to the home page.
+      router.push('/');
+    }
+
+  }, [authUser, userProfile, authLoading, userProfileLoading, isPublicPage, pathname, router]);
+
+
   // 1. While auth is loading, show a loader.
   if (authLoading) {
     return <FullPageLoader />;
   }
 
-  // 2. If auth is done and there's no user...
-  if (!authUser) {
-    // ...and we are on a protected page, redirect to login.
-    if (!isPublicPage) {
-      router.push('/login');
-      return <FullPageLoader />; // Show loader during redirect
-    }
-    // ...and we are on a public page, show the page.
+  // 2. If auth is done and there's no user on a protected page, show loader during redirect.
+  if (!authUser && !isPublicPage) {
+    return <FullPageLoader />;
+  }
+  
+  // 3. If on a public page, just show the page (for login/signup).
+  if (isPublicPage) {
     return <>{children}</>;
   }
 
-  // 3. If we have an auth user but are still waiting for their profile...
+  // 4. If we have an auth user but are still waiting for their profile, show loader.
   if (authUser && userProfileLoading) {
      return <FullPageLoader />;
   }
 
-  // 4. If we have an auth user, profile loading is done, but the profile is missing...
+  // 5. If profile loading is finished, but there's no profile, show an error component.
   if (authUser && !userProfile) {
      return <MissingProfileError />;
   }
-
-  // 5. If we have both an auth user and their profile...
+  
+  // 6. If we have both an auth user and their profile, show the app.
   if (authUser && userProfile) {
-    // ...and they are on a public page, redirect them to the home page.
-    if (isPublicPage) {
-      router.push('/');
-      return <FullPageLoader />; // Show loader during redirect
-    }
-    // ...and they are on a protected page, show the app layout.
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
 
