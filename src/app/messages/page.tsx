@@ -4,8 +4,8 @@ import { ChatLayout } from "@/components/connect-hub/messages/chat-layout";
 import { useUser, useFirestore } from '@/firebase/index';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { UserProfile, Conversation as ConversationType } from '@/lib/types';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { useMemo } from "react";
+import { collection, query, where, orderBy, documentId } from 'firebase/firestore';
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { User as UserIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -47,18 +47,31 @@ export default function MessagesPage() {
   const searchParams = useSearchParams();
   const conversationIdFromUrl = searchParams.get('conversationId');
 
-  const usersQuery = useMemo(() => {
-    if (!db) return null;
-    return collection(db, 'users');
-  }, [db]);
+  const [participantIds, setParticipantIds] = useState<string[]>([]);
 
   const conversationsQuery = useMemo(() => {
     if (!db || !authUser) return null;
     return query(collection(db, 'conversations'), where('participantIds', 'array-contains', authUser.uid), orderBy('lastMessageAt', 'desc'));
   }, [db, authUser]);
 
-  const { data: users, loading: usersLoading } = useCollection<UserProfile>(usersQuery);
   const { data: conversationsData, loading: convosLoading } = useCollection<ConversationType>(conversationsQuery);
+  
+  useEffect(() => {
+    if (conversationsData) {
+      const allParticipantIds = conversationsData.flatMap(convo => convo.participantIds);
+      const uniqueIds = [...new Set(allParticipantIds)];
+      setParticipantIds(uniqueIds);
+    }
+  }, [conversationsData]);
+  
+  const usersQuery = useMemo(() => {
+    if (!db || participantIds.length === 0) return null;
+    // Use `documentId()` which is equivalent to `FieldPath.documentId()`
+    // to query by document ID.
+    return query(collection(db, 'users'), where(documentId(), 'in', participantIds));
+  }, [db, participantIds]);
+
+  const { data: users, loading: usersLoading } = useCollection<UserProfile>(usersQuery);
 
   const conversations = useMemo(() => {
     if (!conversationsData || !users) return [];
@@ -66,17 +79,26 @@ export default function MessagesPage() {
     return conversationsData.map(convo => {
       const participants: { [key: string]: UserProfile } = {};
       convo.participantIds.forEach(id => {
-        const user = users.find(u => u.uid === id);
+        // Use documentId for comparison as our query is based on it.
+        const user = users.find(u => u.id === id);
         if (user) {
           participants[id] = user;
         }
       });
       return { ...convo, participants };
+    }).filter(convo => {
+      // Ensure we only show conversations where participant data was successfully fetched.
+      return Object.keys(convo.participants).length === convo.participantIds.length;
     });
 
   }, [conversationsData, users]);
 
-  if (authLoading || usersLoading || convosLoading) {
+  const currentUserProfile = useMemo(() => {
+    if(!authUser || !users) return undefined;
+    return users.find(u => u.id === authUser.uid);
+  }, [authUser, users])
+
+  if (authLoading || (authUser && (convosLoading || usersLoading)) || (authUser && !currentUserProfile && participantIds.length > 0)) {
     return <ChatSkeleton />;
   }
   
@@ -94,12 +116,16 @@ export default function MessagesPage() {
       </div>
     );
   }
+
+  if(!currentUserProfile) {
+     return <ChatSkeleton />;
+  }
   
   return (
     <div className="h-[calc(100vh-4rem)]">
         <ChatLayout 
             conversations={conversations} 
-            currentUser={users?.find(u => u.uid === authUser.uid)!}
+            currentUser={currentUserProfile}
             defaultConversationId={conversationIdFromUrl}
         />
     </div>
