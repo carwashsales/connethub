@@ -115,8 +115,10 @@ service cloud.firestore {
 
 
       match /messages/{messageId} {
-         // A user can read/write messages in a conversation if they are a participant in that conversation.
-         allow read, write: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid]);
+         // A user can read messages in a conversation.
+         allow read: if true;
+         // A user can write messages in a conversation if they are a participant in that conversation.
+         allow write: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid]);
       }
     }
   }
