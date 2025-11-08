@@ -1,17 +1,17 @@
 'use client';
 
 import { ChatLayout } from "@/components/connect-hub/messages/chat-layout";
-import { useUser, useFirestore } from '@/firebase/index';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useUser } from '@/firebase/index';
 import type { UserProfile, Conversation as ConversationType } from '@/lib/types';
-import { collection, query, where, orderBy, documentId } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, MessageSquare } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "next/navigation";
+import { getConversations } from "@/ai/flows/get-conversations";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 function ChatSkeleton() {
   return (
@@ -43,59 +43,43 @@ function ChatSkeleton() {
 
 export default function MessagesPage() {
   const { user: authUser, loading: authLoading } = useUser();
-  const db = useFirestore();
   const searchParams = useSearchParams();
   const conversationIdFromUrl = searchParams.get('conversationId');
 
-  const [participantIds, setParticipantIds] = useState<string[]>([]);
+  const [conversations, setConversations] = useState<ConversationType[]>([]);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
-  const conversationsQuery = useMemo(() => {
-    if (!db || !authUser) return null;
-    return query(collection(db, 'conversations'), where('participantIds', 'array-contains', authUser.uid), orderBy('lastMessageAt', 'desc'));
-  }, [db, authUser]);
-
-  const { data: conversationsData, loading: convosLoading } = useCollection<ConversationType>(conversationsQuery);
-  
   useEffect(() => {
-    if (conversationsData) {
-      const allParticipantIds = conversationsData.flatMap(convo => convo.participantIds);
-      const uniqueIds = [...new Set(allParticipantIds)];
-      setParticipantIds(uniqueIds);
-    }
-  }, [conversationsData]);
-  
-  const usersQuery = useMemo(() => {
-    if (!db || participantIds.length === 0) return null;
-    return query(collection(db, 'users'), where('uid', 'in', participantIds));
-  }, [db, participantIds]);
+    if (!authLoading && authUser) {
+      const fetchConversations = async () => {
+        try {
+          setLoading(true);
+          const result = await getConversations({ userId: authUser.uid });
+          
+          // Convert string dates back to Date objects
+          const conversationsWithDates = result.conversations.map(c => ({
+              ...c,
+              lastMessageAt: c.lastMessageAt ? new Date(c.lastMessageAt) : undefined,
+          })) as unknown as ConversationType[];
 
-  const { data: users, loading: usersLoading } = useCollection<UserProfile>(usersQuery);
+          setConversations(conversationsWithDates);
+          setCurrentUserProfile(result.currentUser);
 
-  const conversations = useMemo(() => {
-    if (!conversationsData || !users) return [];
-    
-    return conversationsData.map(convo => {
-      const participants: { [key: string]: UserProfile } = {};
-      convo.participantIds.forEach(id => {
-        const user = users.find(u => u.uid === id);
-        if (user) {
-          participants[id] = user;
+        } catch (error) {
+          console.error("Failed to fetch conversations:", error);
+        } finally {
+          setLoading(false);
         }
-      });
-      return { ...convo, participants };
-    }).filter(convo => {
-      // Ensure we only show conversations where participant data was successfully fetched.
-      return Object.keys(convo.participants).length === convo.participantIds.length;
-    });
+      };
+      fetchConversations();
+    } else if (!authLoading && !authUser) {
+        setLoading(false);
+    }
+  }, [authUser, authLoading]);
+  
 
-  }, [conversationsData, users]);
-
-  const currentUserProfile = useMemo(() => {
-    if(!authUser || !users) return undefined;
-    return users.find(u => u.uid === authUser.uid);
-  }, [authUser, users])
-
-  if (authLoading || (authUser && (convosLoading || usersLoading)) || (authUser && !currentUserProfile && participantIds.length > 0)) {
+  if (authLoading || loading) {
     return <ChatSkeleton />;
   }
   
@@ -114,15 +98,23 @@ export default function MessagesPage() {
     );
   }
 
-  if(!currentUserProfile) {
-     return <ChatSkeleton />;
+  if(!currentUserProfile && !loading) {
+     return (
+        <div className="container mx-auto py-8 px-4 text-center h-full flex items-center justify-center">
+             <Card className="max-w-md mx-auto p-8">
+              <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h2 className="mt-4 text-xl font-semibold">Could not load profile</h2>
+              <p className="mt-2 text-muted-foreground">There was an issue loading your user data.</p>
+          </Card>
+        </div>
+     );
   }
   
   return (
     <div className="h-[calc(100vh-4rem)]">
         <ChatLayout 
             conversations={conversations} 
-            currentUser={currentUserProfile}
+            currentUser={currentUserProfile!}
             defaultConversationId={conversationIdFromUrl}
         />
     </div>
