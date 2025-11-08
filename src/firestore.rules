@@ -39,13 +39,9 @@ service cloud.firestore {
      * @principle Enforces path-based ownership for writes, but allows public reads for display purposes.
      */
     match /users/{userId} {
-      function isOwner() {
-        return request.auth.uid == userId;
-      }
-
       allow get: if true;
       allow list: if false;
-      allow create, update, delete: if isOwner();
+      allow create, update, delete: if request.auth.uid == userId;
     }
 
     /**
@@ -62,11 +58,9 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes to marketplace listings.
      */
     match /products/{productId} {
-      allow get: if true;
-      allow list: if true;
+      allow read, list: if true;
       allow create: if request.auth.uid == request.resource.data.sellerId;
-      allow update: if request.auth.uid == resource.data.sellerId;
-      allow delete: if request.auth.uid == resource.data.sellerId;
+      allow update, delete: if request.auth.uid == resource.data.sellerId;
     }
 
     /**
@@ -83,11 +77,9 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes to lost and found items.
      */
     match /lostAndFoundItems/{itemId} {
-      allow get: if true;
-      allow list: if true;
+      allow read, list: if true;
       allow create: if request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth.uid == resource.data.userId;
-      allow delete: if request.auth.uid == resource.data.userId;
+      allow update, delete: if request.auth.uid == resource.data.userId;
     }
 
     /**
@@ -122,11 +114,9 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes to posts.
      */
     match /posts/{postId} {
-      allow get: if true;
-      allow list: if true;
+      allow read, list: if true;
       allow create: if request.auth.uid == request.resource.data.authorId;
-      allow update: if request.auth.uid == resource.data.authorId;
-      allow delete: if request.auth.uid == resource.data.authorId;
+      allow update, delete: if request.auth.uid == resource.data.authorId;
     }
 
     /**
@@ -162,6 +152,7 @@ service cloud.firestore {
       
       // Allow a user to read or create a conversation document if they are a participant.
       allow get, create: if request.auth != null && request.auth.uid in request.resource.data.participantIds;
+      
       // Allow a user to update a conversation if they are a participant
       allow update: if request.auth != null && request.auth.uid in resource.data.participantIds;
 
