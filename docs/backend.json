@@ -188,7 +188,7 @@
           "type": "string",
           "description": "Unique identifier for the Post entity."
         },
-        "userId": {
+        "authorId": {
           "type": "string",
           "description": "Reference to UserProfile who created the post. (Relationship: UserProfile 1:N Post)"
         },
@@ -209,7 +209,7 @@
       },
       "required": [
         "id",
-        "userId",
+        "authorId",
         "content",
         "timestamp"
       ]
@@ -293,7 +293,8 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
@@ -347,17 +348,17 @@
         }
       },
       {
-        "path": "/messages/{messageId}",
+        "path": "/conversations/{conversationId}",
         "definition": {
-          "entityName": "Message",
+          "entityName": "Conversation",
           "schema": {
-            "$ref": "#/backend/entities/Message"
+            "$ref": "#/backend/entities/Conversation"
           },
-          "description": "Messages.  The 'senderId' and 'receiverId' fields are used to control access.",
+          "description": "A private conversation between two or more users.",
           "params": [
             {
-              "name": "messageId",
-              "description": "The unique identifier of the message."
+              "name": "conversationId",
+              "description": "The unique identifier for the conversation."
             }
           ]
         }
@@ -369,7 +370,7 @@
           "schema": {
             "$ref": "#/backend/entities/Post"
           },
-          "description": "Posts in the news feed. The 'userId' field indicates the author.",
+          "description": "Posts in the news feed. The 'authorId' field indicates the author.",
           "params": [
             {
               "name": "postId",
