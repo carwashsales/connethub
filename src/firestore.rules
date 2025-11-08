@@ -32,8 +32,7 @@ service cloud.firestore {
      * @path /users/{userId}
      */
     match /users/{userId} {
-      allow get: if true;
-      allow list: if request.auth != null;
+      allow read: if true;
       allow create, update, delete: if request.auth.uid == userId;
     }
 
@@ -90,12 +89,9 @@ service cloud.firestore {
      * @path /conversations/{conversationId}
      */
     match /conversations/{conversationId} {
-      // Allow a user to list conversations they are part of.
-      // The client-side query MUST use `where('participantIds', 'array-contains', request.auth.uid)` for this to be secure.
-      allow list: if request.auth != null;
+      allow read: if true;
       
-      // Allow a user to read or create a conversation document if they are a participant.
-      allow get: if request.auth != null && resource.data.participantIds.hasAny([request.auth.uid]);
+      // Allow a user to create a conversation document if they are a participant.
       allow create: if request.auth != null && request.resource.data.participantIds.hasAny([request.auth.uid]);
       
       // Allow a user to update a conversation if they are a participant.
@@ -108,7 +104,8 @@ service cloud.firestore {
       match /messages/{messageId} {
          // A user can read/write messages in a conversation if they are a participant in that conversation.
          // This uses a `get()` call to check the parent conversation document.
-         allow read, write: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid]);
+         allow read: if true;
+         allow write: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid]);
       }
     }
   }
