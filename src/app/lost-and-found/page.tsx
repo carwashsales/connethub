@@ -103,7 +103,17 @@ export default function LostAndFoundPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <PostLostFoundItemForm isOpen={isFormOpen} onOpenChange={setIsFormOpen} />
+      <PostLostFoundItemForm isOpen={isFormOpen} onOpenChange={setIsFormOpen} onSave={() => {
+          // Re-fetch items after a new one is posted
+          setLoading(true);
+          getLostAndFoundItems().then(fetchedItems => {
+              const itemsWithDate = fetchedItems.map(item => ({
+                  ...item,
+                  createdAt: new Date(item.createdAt),
+              })) as unknown as LostFoundItem[];
+              setItems(itemsWithDate);
+          }).finally(() => setLoading(false));
+      }} />
       <Tabs defaultValue="lost" className="w-full">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <TabsList>

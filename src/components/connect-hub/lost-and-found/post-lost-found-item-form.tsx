@@ -26,9 +26,10 @@ type PostLostFoundItemFormProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   itemToEdit?: LostFoundItem;
+  onSave?: () => void;
 };
 
-export function PostLostFoundItemForm({ isOpen, onOpenChange, itemToEdit }: PostLostFoundItemFormProps) {
+export function PostLostFoundItemForm({ isOpen, onOpenChange, itemToEdit, onSave }: PostLostFoundItemFormProps) {
   const { user: authUser } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
@@ -38,10 +39,13 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange, itemToEdit }: Post
   const isEdit = !!itemToEdit;
 
   useEffect(() => {
-    if (itemToEdit) {
-      setItemType(itemToEdit.type);
-    } else {
-      setItemType('lost');
+    if(isOpen) {
+        if (itemToEdit) {
+          setItemType(itemToEdit.type);
+        } else {
+          setItemType('lost');
+          formRef.current?.reset();
+        }
     }
   }, [itemToEdit, isOpen]);
 
@@ -98,7 +102,7 @@ export function PostLostFoundItemForm({ isOpen, onOpenChange, itemToEdit }: Post
         toast({ title: 'Success!', description: 'Item posted successfully!' });
       }
       
-      formRef.current?.reset();
+      onSave?.();
       onOpenChange(false);
 
     } catch (error) {

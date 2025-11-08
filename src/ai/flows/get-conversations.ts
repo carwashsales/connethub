@@ -10,7 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { initializeFirebase } from '@/firebase/server-init';
-import { collection, getDocs, query, where, documentId, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 import { z } from 'zod';
 import type { UserProfile, Conversation } from '@/lib/types';
 
@@ -75,12 +76,12 @@ const getConversationsFlow = ai.defineFlow(
     );
     const conversationsSnapshot = await getDocs(conversationsQuery);
     
-    if (conversationsSnapshot.empty) {
-        const userDoc = await getDocs(query(collection(firestore, 'users'), where('uid', '==', userId)));
-        if (userDoc.empty) throw new Error("Current user profile not found.");
+    const userDocSnapshot = await getDocs(query(collection(firestore, 'users'), where('uid', '==', userId)));
+    if (userDocSnapshot.empty) throw new Error("Current user profile not found.");
+    
+    const currentUser = { ...userDocSnapshot.docs[0].data(), id: userDocSnapshot.docs[0].id } as UserProfile;
 
-        const currentUser = { ...userDoc.docs[0].data(), id: userDoc.docs[0].id } as UserProfile;
-        
+    if (conversationsSnapshot.empty) {
         return {
             currentUser: UserProfileSchema.parse(currentUser),
             conversations: [],
@@ -109,7 +110,7 @@ const getConversationsFlow = ai.defineFlow(
     }
 
     if (!users[userId]) {
-        throw new Error("Current user profile not found among participants.");
+        users[userId] = currentUser;
     }
     
     // 4. Assemble the final conversation objects with populated participant data.
@@ -125,7 +126,7 @@ const getConversationsFlow = ai.defineFlow(
             ...convo,
             participants,
             // Convert timestamps to JSON-serializable ISO strings.
-            lastMessageAt: (convo.lastMessageAt as any)?.toDate?.().toISOString(),
+            lastMessageAt: (convo.lastMessageAt as unknown as Timestamp)?.toDate?.().toISOString(),
         };
     });
 

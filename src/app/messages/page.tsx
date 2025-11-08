@@ -3,13 +3,13 @@
 import { ChatLayout } from "@/components/connect-hub/messages/chat-layout";
 import { useUser } from '@/firebase/index';
 import type { UserProfile, Conversation as ConversationType } from '@/lib/types';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { User as UserIcon, MessageSquare } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getConversations } from "@/ai/flows/get-conversations";
+import { getConversations } from '@/ai/flows/get-conversations';
 import { Skeleton } from "@/components/ui/skeleton";
 
 
