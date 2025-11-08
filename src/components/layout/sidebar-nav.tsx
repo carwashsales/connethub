@@ -10,7 +10,7 @@ import {
   SidebarGroup,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { Home, Store, Search, MessageSquare, Settings, LogIn, LogOut, UserPlus, UserCircle } from 'lucide-react';
+import { Home, Store, Search, MessageSquare, Settings, LogIn, LogOut, UserPlus, UserCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
@@ -24,6 +24,7 @@ const navItems = [
   { href: '/marketplace', label: 'Marketplace', icon: Store },
   { href: '/lost-and-found', label: 'Lost & Found', icon: Search },
   { href: '/messages', label: 'Messages', icon: MessageSquare },
+  { href: '/directory', label: 'Directory', icon: Users },
 ];
 
 export function SidebarNav({ user }: { user: UserProfile | null }) {

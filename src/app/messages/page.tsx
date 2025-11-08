@@ -66,9 +66,7 @@ export default function MessagesPage() {
   
   const usersQuery = useMemo(() => {
     if (!db || participantIds.length === 0) return null;
-    // Use `documentId()` which is equivalent to `FieldPath.documentId()`
-    // to query by document ID.
-    return query(collection(db, 'users'), where(documentId(), 'in', participantIds));
+    return query(collection(db, 'users'), where('uid', 'in', participantIds));
   }, [db, participantIds]);
 
   const { data: users, loading: usersLoading } = useCollection<UserProfile>(usersQuery);
@@ -79,8 +77,7 @@ export default function MessagesPage() {
     return conversationsData.map(convo => {
       const participants: { [key: string]: UserProfile } = {};
       convo.participantIds.forEach(id => {
-        // Use documentId for comparison as our query is based on it.
-        const user = users.find(u => u.id === id);
+        const user = users.find(u => u.uid === id);
         if (user) {
           participants[id] = user;
         }
@@ -95,7 +92,7 @@ export default function MessagesPage() {
 
   const currentUserProfile = useMemo(() => {
     if(!authUser || !users) return undefined;
-    return users.find(u => u.id === authUser.uid);
+    return users.find(u => u.uid === authUser.uid);
   }, [authUser, users])
 
   if (authLoading || (authUser && (convosLoading || usersLoading)) || (authUser && !currentUserProfile && participantIds.length > 0)) {

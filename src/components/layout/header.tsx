@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Home, Store, Search, MessageSquare, UserCircle2, Settings } from 'lucide-react';
+import { Home, Store, Search, MessageSquare, UserCircle2, Settings, Users } from 'lucide-react';
 import React from 'react';
 
 const routeTitles: { [key: string]: { title: string; icon: React.ElementType } } = {
@@ -9,6 +9,7 @@ const routeTitles: { [key: string]: { title: string; icon: React.ElementType } }
   '/marketplace': { title: 'Marketplace', icon: Store },
   '/lost-and-found': { title: 'Lost & Found', icon: Search },
   '/messages': { title: 'Messages', icon: MessageSquare },
+  '/directory': { title: 'Directory', icon: Users },
   '/profile': { title: 'Profile', icon: UserCircle2 },
   '/settings': { title: 'Settings', icon: Settings },
 };
