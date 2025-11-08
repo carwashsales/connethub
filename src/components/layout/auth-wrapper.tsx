@@ -76,19 +76,36 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   const { data: userProfile, isLoading: userProfileLoading } = useDoc<UserProfile>(userDocRef);
 
+  console.log('[AuthWrapper] Render:', {
+      pathname,
+      isPublicPage,
+      authLoading,
+      authUser: !!authUser,
+      userProfileLoading,
+      userProfile: !!userProfile,
+  });
+
+
   useEffect(() => {
-    // This effect handles redirects safely after rendering.
+    console.log('[AuthWrapper Effect] Checking redirects...', {
+      authLoading,
+      userProfileLoading,
+      authUser: !!authUser,
+      userProfile: !!userProfile,
+      isPublicPage,
+    });
     if (authLoading || userProfileLoading) {
-      return; // Do nothing while we are still loading information.
+      console.log('[AuthWrapper Effect] Still loading, skipping redirects.');
+      return; 
     }
     
     if (!authUser && !isPublicPage) {
-      // If not logged in and on a protected page, redirect to login.
+      console.log('[AuthWrapper Effect] No authUser on protected page. Redirecting to /login.');
       router.push('/login');
     }
 
     if (authUser && userProfile && isPublicPage) {
-      // If logged in and on a public page, redirect to the home page.
+      console.log('[AuthWrapper Effect] authUser and profile exist on public page. Redirecting to /.');
       router.push('/');
     }
 
@@ -97,34 +114,47 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   // 1. While auth is loading, show a loader.
   if (authLoading) {
+    console.log('[AuthWrapper] Branch 1: Auth loading...');
     return <FullPageLoader />;
   }
 
-  // 2. If auth is done and there's no user on a protected page, show loader during redirect.
-  if (!authUser && !isPublicPage) {
+  // 2. If auth is done and there's no user.
+  if (!authUser) {
+    // If it's a public page, show it.
+    if (isPublicPage) {
+        console.log('[AuthWrapper] Branch 2a: No authUser, showing public page.');
+        return <>{children}</>;
+    }
+    // Otherwise, we are redirecting, so show a loader.
+    console.log('[AuthWrapper] Branch 2b: No authUser, redirecting. Showing loader.');
     return <FullPageLoader />;
   }
   
-  // 3. If on a public page, just show the page (for login/signup).
-  if (isPublicPage) {
-    return <>{children}</>;
+  // 3. If we have an auth user but are still waiting for their profile, show loader.
+  if (authUser && userProfileLoading) {
+     console.log('[AuthWrapper] Branch 3: Have authUser, but profile is loading...');
+     return <FullPageLoader />;
   }
 
-  // 4. If we have an auth user but are still waiting for their profile, show loader.
-  if (authUser && userProfileLoading) {
-     return <FullPageLoader />;
+  // 4. If on a public page (but we have a user and profile), we are redirecting.
+  if (isPublicPage) {
+      console.log('[AuthWrapper] Branch 4: On public page with user, redirecting. Showing loader.');
+      return <FullPageLoader />;
   }
 
   // 5. If profile loading is finished, but there's no profile, show an error component.
   if (authUser && !userProfile) {
+     console.log('[AuthWrapper] Branch 5: Have authUser, but no profile found. Showing error.');
      return <MissingProfileError />;
   }
   
   // 6. If we have both an auth user and their profile, show the app.
   if (authUser && userProfile) {
+    console.log('[AuthWrapper] Branch 6: Success! Have authUser and profile. Showing app.');
     return <AppLayout user={userProfile}>{children}</AppLayout>;
   }
 
   // Fallback state, should ideally not be reached.
+  console.log('[AuthWrapper] Fallback: No condition met, showing loader.');
   return <FullPageLoader />;
 }
