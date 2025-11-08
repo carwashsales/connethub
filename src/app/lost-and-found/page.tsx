@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ItemCard } from "@/components/connect-hub/lost-and-found/item-card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, SearchX } from "lucide-react";
-import { useFirestore, useUser } from '@/firebase/index';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useUser } from '@/firebase/index';
 import { LostFoundItem } from '@/lib/types';
 import { PostLostFoundItemForm } from '@/components/connect-hub/lost-and-found/post-lost-found-item-form';
 import { SearchBar } from '@/components/connect-hub/shared/search-bar';
 import { Card } from '@/components/ui/card';
+import { getLostAndFoundItems } from '@/ai/flows/get-lost-and-found-items';
 
 function ItemListSkeleton() {
   return (
@@ -73,24 +72,34 @@ function ItemList({ items, loading, searchTerm }: { items: LostFoundItem[] | nul
 
 
 export default function LostAndFoundPage() {
-  const db = useFirestore();
   const { user } = useUser();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [items, setItems] = useState<LostFoundItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const lostItemsQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, "lostAndFoundItems"), where("type", "==", "lost"), orderBy("createdAt", "desc"));
-  }, [db]);
-
-  const foundItemsQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, "lostAndFoundItems"), where("type", "==", "found"), orderBy("createdAt", "desc"));
-  }, [db]);
-
-  const { data: lostItems, loading: loadingLost } = useCollection<LostFoundItem>(lostItemsQuery);
-  const { data: foundItems, loading: loadingFound } = useCollection<LostFoundItem>(foundItemsQuery);
-
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setLoading(true);
+        const fetchedItems = await getLostAndFoundItems();
+        // The timestamp will be a string, so we need to convert it.
+        const itemsWithDate = fetchedItems.map(item => ({
+            ...item,
+            createdAt: new Date(item.createdAt),
+        })) as unknown as LostFoundItem[];
+        setItems(itemsWithDate);
+      } catch (error) {
+        console.error("Failed to fetch lost and found items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItems();
+  }, []);
+  
+  const lostItems = useMemo(() => items.filter(item => item.type === 'lost'), [items]);
+  const foundItems = useMemo(() => items.filter(item => item.type === 'found'), [items]);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -111,10 +120,10 @@ export default function LostAndFoundPage() {
           </div>
         </div>
         <TabsContent value="lost">
-          <ItemList items={lostItems} loading={loadingLost} searchTerm={searchTerm} />
+          <ItemList items={lostItems} loading={loading} searchTerm={searchTerm} />
         </TabsContent>
         <TabsContent value="found">
-          <ItemList items={foundItems} loading={loadingFound} searchTerm={searchTerm} />
+          <ItemList items={foundItems} loading={loading} searchTerm={searchTerm} />
         </TabsContent>
       </Tabs>
     </div>
