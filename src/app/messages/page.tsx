@@ -3,7 +3,7 @@
 import { ChatLayout } from "@/components/connect-hub/messages/chat-layout";
 import { useUser } from '@/firebase/index';
 import type { UserProfile, Conversation as ConversationType } from '@/lib/types';
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { User as UserIcon, MessageSquare } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export default function MessagesPage() {
   const searchParams = useSearchParams();
   const conversationIdFromUrl = searchParams.get('conversationId');
 
-  const [conversations, setConversations] = useState<ConversationType[]>([]);
+  const [rawConversations, setRawConversations] = useState<ConversationType[]>([]);
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
@@ -60,10 +60,10 @@ export default function MessagesPage() {
           // Convert string dates back to Date objects
           const conversationsWithDates = result.conversations.map(c => ({
               ...c,
-              lastMessageAt: c.lastMessageAt ? new Date(c.lastMessageAt) : undefined,
+              lastMessageAt: c.lastMessageAt ? new Date(c.lastMessageAt) : new Date(0), // Use epoch for sorting if undefined
           })) as unknown as ConversationType[];
 
-          setConversations(conversationsWithDates);
+          setRawConversations(conversationsWithDates);
           setCurrentUserProfile(result.currentUser);
 
         } catch (error) {
@@ -77,6 +77,15 @@ export default function MessagesPage() {
         setLoading(false);
     }
   }, [authUser, authLoading]);
+
+  // Memoized client-side sorting
+  const conversations = useMemo(() => {
+      return [...rawConversations].sort((a, b) => {
+          const timeA = a.lastMessageAt?.getTime() || 0;
+          const timeB = b.lastMessageAt?.getTime() || 0;
+          return timeB - timeA; // Sort descending
+      });
+  }, [rawConversations]);
   
 
   if (authLoading || loading) {

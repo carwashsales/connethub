@@ -67,12 +67,11 @@ const getConversationsFlow = ai.defineFlow(
   async ({ userId }) => {
     const { firestore } = initializeFirebase();
 
-    // 1. Fetch all conversations the user is part of.
+    // 1. Fetch all conversations the user is part of. (Sorting is removed here)
     const conversationsRef = collection(firestore, 'conversations');
     const conversationsQuery = query(
         conversationsRef, 
-        where('participantIds', 'array-contains', userId),
-        orderBy('lastMessageAt', 'desc')
+        where('participantIds', 'array-contains', userId)
     );
     const conversationsSnapshot = await getDocs(conversationsQuery);
     
