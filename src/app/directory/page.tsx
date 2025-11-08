@@ -4,7 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useFirestore, useUser } from "@/firebase/index";
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from "@/firebase/firestore/use-collection";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import type { UserProfile } from "@/lib/types";
 import { Loader2, MessageSquare, Search as SearchIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -12,7 +13,6 @@ import { SearchBar } from "@/components/connect-hub/shared/search-bar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getUsers, type UserOutput } from "@/ai/flows/get-users";
 
 
 function UserCardSkeleton() {
@@ -83,24 +83,12 @@ export default function DirectoryPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isCreatingConversation, setIsCreatingConversation] = useState(false);
     
-    const [allUsers, setAllUsers] = useState<UserOutput[]>([]);
-    const [loading, setLoading] = useState(true);
+    const usersQuery = useMemo(() => {
+        if (!db) return null;
+        return query(collection(db, 'users'), orderBy('name', 'asc'));
+    }, [db]);
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                setLoading(true);
-                const fetchedUsers = await getUsers();
-                setAllUsers(fetchedUsers);
-            } catch (error) {
-                console.error("Failed to fetch users:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUsers();
-    }, []);
-
+    const { data: allUsers, loading } = useCollection<UserProfile>(usersQuery);
 
     const filteredUsers = useMemo(() => {
         if (!allUsers) return [];
@@ -152,7 +140,7 @@ export default function DirectoryPage() {
                 {filteredUsers.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {filteredUsers.map(user => (
-                            <UserCard key={user.id} user={user as UserProfile} onMessage={handleSendMessage} isMessagingDisabled={isCreatingConversation} />
+                            <UserCard key={user.id} user={user} onMessage={handleSendMessage} isMessagingDisabled={isCreatingConversation} />
                         ))}
                     </div>
                 ) : (
